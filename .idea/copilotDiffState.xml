@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/.gitignore">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/.gitignore" />
+              <option name="originalContent" value="&#10;" />
+              <option name="updatedContent" value="# Compiled class file&#10;*.class&#10;&#10;# Log file&#10;*.log&#10;&#10;# BlueJ files&#10;*.ctxt&#10;&#10;# Mobile Tools for Java (J2ME)&#10;.mtj.tmp/&#10;&#10;# Package Files #&#10;*.jar&#10;*.war&#10;*.nar&#10;*.ear&#10;*.zip&#10;*.tar.gz&#10;*.rar&#10;&#10;# virtual machine crash logs&#10;hs_err_pid*&#10;&#10;# Maven&#10;target/&#10;pom.xml.tag&#10;pom.xml.releaseBackup&#10;pom.xml.versionsBackup&#10;pom.xml.next&#10;release.properties&#10;dependency-reduced-pom.xml&#10;buildNumber.properties&#10;.mvn/timing.properties&#10;.mvn/wrapper/maven-wrapper.jar&#10;&#10;# IDE&#10;.idea/&#10;*.iws&#10;*.iml&#10;*.ipr&#10;.vscode/&#10;.settings/&#10;.project&#10;.classpath&#10;&#10;# OS&#10;.DS_Store&#10;Thumbs.db&#10;&#10;# Spring Boot&#10;*.pid&#10;*.pid.lock&#10;&#10;# Environment variables&#10;.env&#10;.env.local&#10;.env.*.local&#10;&#10;# Logs&#10;logs/&#10;*.log&#10;&#10;# Database&#10;*.db&#10;*.sqlite&#10;*.sqlite3&#10;&#10;# JPA/Hibernate&#10;*.lck&#10;&#10;# H2 Database&#10;*.mv.db&#10;*.trace.db" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/README.md">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/README.md" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/main/resources/application.properties">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/main/resources/application.properties" />
+              <option name="originalContent" value="spring.application.name=user-management-api&#10;server.port=8085&#10;" />
+              <option name="updatedContent" value="spring.application.name=user-management-api&#10;server.port=8086" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
