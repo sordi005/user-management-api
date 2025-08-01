@@ -8,25 +8,33 @@ import com.sordi.userManagement.model.dto.request.CreateUserRequest;
 import com.sordi.userManagement.model.dto.request.UpdateUserRequest;
 import com.sordi.userManagement.model.dto.response.UserResponse;
 import com.sordi.userManagement.repository.UserRepository;
-import com.sordi.userManagement.security.JwtTokenProvider;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
+/**
+ * Servicio para gestión de usuarios
+ */
 @Service
 @RequiredArgsConstructor
-@Slf4j  // ← AGREGAR para logging
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
 
+    /**
+     * Crear un nuevo usuario
+     * @param request datos del usuario a crear
+     * @return Respuesta con los datos del usuario creado
+     */
     @Transactional
     public UserResponse createUser(CreateUserRequest request) {
         log.info("Iniciando creación de usuario con username: {}", request.getUsername());
@@ -62,6 +70,12 @@ public class UserService {
             throw new BusinessException("Error interno al crear usuario");
         }
     }
+    /**
+     * Actualizar un usuario existente
+     * @param id ID del usuario a actualizar
+     * @param request datos de actualización
+     * @return usuario actualizado
+     */
 
     @Transactional
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
@@ -100,39 +114,95 @@ public class UserService {
             log.error("Error inesperado al actualizar usuario con ID: {}", id, e.getMessage(), e);
             throw  new BusinessException("Error interno al actualizar usuario");
         }
-
     }
+    /**
+     * Eliminar un usuario por ID
+     * @param id ID del usuario a eliminar
+     */
     @Transactional
     public void deleteUser(Long id) {
-        log.info("Iniciando Eliminación de usuario con ID: {}", id);
+        log.info("Iniciando eliminación de usuario con ID: {}", id);
         if (id == null) throw new BusinessException("ID de usuario es requerido para eliminar");
         if (!userRepository.existsById(id)) {
             log.warn("Intento de eliminar usuario inexistente con ID: {}", id);
             throw new ResourceNotFoundException("Usuario con ID " + id + " no encontrado");
         }
-        log.debug("Usuario encontrado para Eliminación ID: {}",id);
+        log.debug("Usuario encontrado para eliminación ID: {}", id);
         try{
             userRepository.deleteById(id);
+            log.info("Usuario eliminado exitosamente con ID: {}", id);
         }catch (Exception e) {
             log.error("Error inesperado al eliminar usuario con ID: {}", id, e.getMessage(), e);
             throw new BusinessException("Error interno al eliminar usuario");
         }
-
     }
+    /**
+     * Obtener un usuario por ID
+     * @param id ID del usuario a buscar
+     * @return DTO de respuesta con los datos del usuario
+     */
     public UserResponse getUserById(Long id) {
-        log.info("Iniciando obtener el usuario con ID: {}", id);
+        log.info("Iniciando obtención de usuario con ID: {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.warn("Intento de obtener el usuario inexistente con ID: {}", id);
-                    new ResourceNotFoundException("Usuario con ID " + id + " no encontrado");
+                    log.warn("Intento de obtener usuario inexistente con ID: {}", id);
+                    return new ResourceNotFoundException("Usuario con ID " + id + " no encontrado");
                 });
 
         return userMapper.toResponse(user);
     }
 
-    List<UserResponse> findAllUsers(){
+    /**
+     * Obtener todos los usuarios con paginación básica
+     * @param page número de página (inicia en 0)
+     * @param size cantidad de usuarios por página
+     * @return página de usuarios
+     */
+    public Page<UserResponse> getAllUsers(int page, int size) {
+        log.info("Obteniendo usuarios - Página: {}, Tamaño: {}", page, size);
+        if (page <= 0 || size <= 0)  {
+            log.warn("Parámetros de paginación inválidos - Página: {}, Tamaño: {}", page, size);
+            throw new BusinessException("Parámetros de paginación inválidos");
+        }
+        try {
+            // Crear paginación ordenada por ID
+            Pageable pageable = PageRequest.of(page, size, Sort.by("id"));
 
+            // Obtener página de usuarios de la BD
+            Page<User> userPage = userRepository.findAll(pageable);
+
+            log.info("Se encontraron {} usuarios en página {} de {}",
+                    userPage.getContent().size(), page, userPage.getTotalPages());
+
+            // Convertir a DTOs y retornar
+            return userPage.map(userMapper::toResponse);
+
+        } catch (Exception e) {
+            log.error("Error al obtener usuarios: {}", e.getMessage(), e);
+            throw new BusinessException("Error interno al obtener usuarios");
+        }
     }
 
+    /**
+     * Buscar usuarios por nombre con paginación
+     * @param firstName nombre a buscar
+     * @param page número de página
+     * @param size tamaño de página
+     * @return página de usuarios que coincidan
+     */
+    public Page<UserResponse> searchUsersByName(String firstName, int page, int size) {
+        log.info("Buscando usuarios por nombre: '{}' - Página: {}, Tamaño: {}", firstName, page, size);
 
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("firstName"));
+            Page<User> userPage = userRepository.findByFirstNameContainingIgnoreCase(firstName, pageable);
+
+            log.info("Se encontraron {} usuarios con nombre: '{}'", userPage.getContent().size(), firstName);
+            return userPage.map(userMapper::toResponse);
+
+        } catch (Exception e) {
+            log.error("Error en búsqueda por nombre: {}", e.getMessage(), e);
+            throw new BusinessException("Error interno en búsqueda");
+        }
+    }
 }
