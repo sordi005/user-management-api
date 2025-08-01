@@ -1,5 +1,6 @@
 package com.sordi.userManagement.service;
 
+import com.sordi.userManagement.config.JwtConfig;
 import com.sordi.userManagement.exception.BusinessException;
 import com.sordi.userManagement.model.User;
 import com.sordi.userManagement.model.dto.request.LoginRequest;
@@ -31,6 +32,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+    private final JwtConfig jwtConfig;
 
     /**
      * Método principal de login
@@ -52,7 +54,7 @@ public class AuthService {
             User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> {
                     log.warn("Usuario autenticado pero no encontrado en BD: {}", loginRequest.getUsername());
-                    return new BusinessException("Error interno de autenticación");
+                    return new RuntimeException("Error interno de autenticación");
                 });
 
             //  Generar JWT token
@@ -64,7 +66,7 @@ public class AuthService {
             return JwtResponse.builder()
                 .accessToken(token)
                 .tokenType("Bearer")             // Tipo de token
-                .expiresIn(3600)                 // Tiempo de expiración en segundos
+                .expiresIn(jwtConfig.getExpirationInSeconds())// Tiempo de expiración en segundos
                 .issuedAt(LocalDateTime.now())   // Cuándo se emitió
                 // refreshToken se puede agregar después si es necesario
                 .build();
