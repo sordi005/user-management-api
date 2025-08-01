@@ -82,7 +82,7 @@ public class UserService {
         log.info("Iniciando actualización de usuario con ID: {}", id);
 
         if (id == null || request == null) {
-            throw new BusinessException("ID de usuario y datos de actualización son requeridos");
+            throw new IllegalArgumentException("ID de usuario y datos de actualización son requeridos");
         }
 
         // Buscar usuario y lanzar excepción si no existe
@@ -112,9 +112,10 @@ public class UserService {
 
         }catch (Exception e) {
             log.error("Error inesperado al actualizar usuario con ID: {}", id, e.getMessage(), e);
-            throw  new BusinessException("Error interno al actualizar usuario");
+            throw  new RuntimeException("Error interno al actualizar usuario");
         }
     }
+
     /**
      * Eliminar un usuario por ID
      * @param id ID del usuario a eliminar
@@ -122,7 +123,7 @@ public class UserService {
     @Transactional
     public void deleteUser(Long id) {
         log.info("Iniciando eliminación de usuario con ID: {}", id);
-        if (id == null) throw new BusinessException("ID de usuario es requerido para eliminar");
+        if (id == null) throw new IllegalArgumentException("ID de usuario es requerido para eliminar");
         if (!userRepository.existsById(id)) {
             log.warn("Intento de eliminar usuario inexistente con ID: {}", id);
             throw new ResourceNotFoundException("Usuario con ID " + id + " no encontrado");
@@ -133,9 +134,10 @@ public class UserService {
             log.info("Usuario eliminado exitosamente con ID: {}", id);
         }catch (Exception e) {
             log.error("Error inesperado al eliminar usuario con ID: {}", id, e.getMessage(), e);
-            throw new BusinessException("Error interno al eliminar usuario");
+            throw new RuntimeException("Error interno al eliminar usuario");
         }
     }
+
     /**
      * Obtener un usuario por ID
      * @param id ID del usuario a buscar
