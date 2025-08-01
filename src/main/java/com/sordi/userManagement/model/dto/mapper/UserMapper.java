@@ -11,13 +11,12 @@ import java.util.List;
 @Mapper(
         componentModel = "spring",
         injectionStrategy = InjectionStrategy.CONSTRUCTOR,
-        unmappedSourcePolicy = ReportingPolicy.ERROR
+        unmappedSourcePolicy = ReportingPolicy.IGNORE
 )
 public interface UserMapper {
 
     @Mappings({
-            @Mapping(target = "password", ignore = true),
-            @Mapping(target = "fullName", expression ="java(buildFullName(user.getFirstName(), user.getLastName()))")
+            @Mapping(target = "fullName", expression ="java(buildFullName(user.getFirstName(), user.getLastName()))"),
     })
     UserResponse toResponse(User user);
 
