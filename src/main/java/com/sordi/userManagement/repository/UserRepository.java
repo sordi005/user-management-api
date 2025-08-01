@@ -1,6 +1,8 @@
 package com.sordi.userManagement.repository;
 
 import com.sordi.userManagement.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,14 +12,11 @@ import java.util.Optional;
 
 /**
  * Repository interface for User entity.
- *
  * Provides CRUD operations and custom queries for User management.
- * Extends JpaRepository which provides basic CRUD operations.
-
  */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    
+
     /**
      * Find a user by their email address.
      *
@@ -68,13 +67,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.email = :email OR u.username = :username")
     Optional<User> findByEmailOrUsername(@Param("email") String email, @Param("username") String username);
 
+
     /**
-     * Check if a user exists with the given email or username.
-     *
-     * @param email the email to check
-     * @param username the username to check
-     * @return true if user exists with either email or username, false otherwise
+     * Buscar usuarios por nombre con paginación
+     * @param firstName nombre a buscar
+     * @param pageable configuración de paginación
+     * @return página de usuarios
      */
-    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email OR u.username = :username")
-    boolean existsByEmailOrUsername(@Param("email") String email, @Param("username") String username);
+    Page<User> findByFirstNameContainingIgnoreCase(String firstName, Pageable pageable);
+
+    /**
+     * Buscar usuarios por email con paginación
+     * @param email email a buscar
+     * @param pageable configuración de paginación
+     * @return página de usuarios
+     */
+    Page<User> findByEmailContainingIgnoreCase(String email, Pageable pageable);
 }
