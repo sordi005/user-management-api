@@ -60,7 +60,6 @@ public class JwtTokenProvider {
         }
 
         try {
-            // CAMBIO: parser() en lugar de parserBuilder() para JWT 0.12.x
             Jwts.parser()
                     .verifyWith(secretKey)
                     .build()
@@ -117,11 +116,10 @@ public class JwtTokenProvider {
     }
 
     /**
-     * Extrae el username (subject) del token JWT.
+     * Extrae el username del token JWT.
      *
      * @param token token JWT válido
      * @return username contenido en el token
-     * @throws BusinessException si el token es inválido o no contiene username
      */
     public String getUsernameFromToken(String token) {
         if (!validateToken(token)) {
@@ -133,7 +131,7 @@ public class JwtTokenProvider {
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
-                .getPayload();  // getPayload() en lugar de getBody()
+                .getPayload();  // Obtiene los claims del token(UserName, issuedAt, expiration, etc.)
 
             String username = claims.getSubject();
             if (username == null || username.trim().isEmpty()) {
