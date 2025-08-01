@@ -2,6 +2,7 @@ package com.sordi.userManagement.model.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -36,11 +37,13 @@ public class ApiResponse<T> {
     /**
      * HTTP status code
      */
+    @JsonProperty("status_code")
     private int statusCode;
 
     /**
      * Timestamp when the response was created
      */
+    @JsonProperty("time_stamp")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private LocalDateTime timestamp;
 
