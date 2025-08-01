@@ -1,7 +1,8 @@
 package com.sordi.userManagement.config;
 
-import com.sordi.userManagement.model.User;
 import com.sordi.userManagement.repository.UserRepository;
+import com.sordi.userManagement.security.CustomUserDetailsService;
+import com.sordi.userManagement.security.JwtAuthenticationFilter;
 import com.sordi.userManagement.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -11,11 +12,12 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.security.PublicKey;
 
 /**
  * Configuración de seguridad para la aplicación.
@@ -27,7 +29,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     // Dependencias necesarias para la configuración de seguridad
-    private final UserRepository userRepository;
+    private final CustomUserDetailsService customUserDetailsService;
     private final JwtTokenProvider jwtTokenProvider;
 
     /**
@@ -39,31 +41,7 @@ public class SecurityConfig {
     }
 
     /**
-     * Bean de UserDetailsService personalizado.
-     * Le dice a Spring Security cómo cargar usuarios desde la base de datos.
-     */
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> {
-            // Buscar usuario en la base de datos
-            User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                    "Usuario no encontrado: " + username));
-
-            // UserDetails es la interfaz que Spring Security entiende
-            return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword()) // Ya viene encriptada de la BD
-                .authorities("USER")
-                .accountExpired(false) // No expirado
-                .accountLocked(false) // No bloqueado
-                .credentialsExpired(false) // Credenciales no expiradas
-                .disabled(false) // No deshabilitado
-                .build();
-        };
-    }
-    /**
-        * Bean para el AuthenticationManager.
+     * Bean para el AuthenticationManager.
      */
     @Bean
     public AuthenticationManager authenticationManager(
@@ -73,13 +51,6 @@ public class SecurityConfig {
 
     /**
      * Bean de SecurityFilterChain - Define las reglas de seguridad de la aplicación.
-     *
-     * ¿Qué hace?
-     * - Define qué endpoints son públicos (sin autenticación)
-     * - Define qué endpoints requieren autenticación
-     * - Configura políticas de sesión (stateless para JWT)
-     * - Deshabilita CSRF (no necesario para APIs REST)
-     * - Configura CORS para frontend
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -107,11 +78,22 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
+            /**
+             * Configurar el filtro de autenticación JWT.
+             * Este filtro intercepta las solicitudes y verifica el token JWT.
+             * Si el token es válido, permite el acceso al recurso solicitado
+             */
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+
             // Configurar headers para H2 console (solo desarrollo)
             // H2 usa frames y Spring Security los bloquea por defecto
             .headers(headers -> headers.frameOptions().disable());
 
         return http.build();
     }
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtTokenProvider,customUserDetailsService);}
+
 
 }
