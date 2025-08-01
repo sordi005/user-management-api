@@ -18,6 +18,8 @@
 		<java.version>21</java.version>
 		<jwt.version>0.12.6</jwt.version>
 		<springdoc.version>2.7.0</springdoc.version>
+		<mapstruct.version>1.5.5.Final</mapstruct.version>
+
 	</properties>
 
 	<dependencies>
@@ -112,6 +114,12 @@
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<!-- MapStruct -->
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${mapstruct.version}</version>
 		</dependency>
 	</dependencies>
 
