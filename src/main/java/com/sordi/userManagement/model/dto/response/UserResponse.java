@@ -1,6 +1,7 @@
 package com.sordi.userManagement.model.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,13 +27,13 @@ public class UserResponse {
      */
     private String username;
 
-
     /**
      * Fecha de nacimiento del usuario
      * Formateada como dd/MM/yyyy en las respuestas JSON
      */
+    @JsonProperty("birth_date")
     @JsonFormat(pattern = "dd/MM/yyyy")
-    private LocalDate birthDate;
+    private LocalDate dateOfBirth;
 
     private String dni;
 
@@ -45,12 +46,14 @@ public class UserResponse {
     /**
      * Nombre completo del usuario (campo calculado)
      */
+    @JsonProperty("full_name")
     private String fullName;
 
     /**
      * Fecha de creación de la cuenta
      * Formateada como dd/MM/yyyy HH:mm:ss en las respuestas JSON
      */
+    @JsonProperty("created_at")
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 
@@ -58,6 +61,7 @@ public class UserResponse {
      * Fecha de última actualización de la cuenta
      * Formateada como dd/MM/yyyy HH:mm:ss en las respuestas JSON
      */
+    @JsonProperty("updated_at")
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private LocalDateTime updatedAt;
 
