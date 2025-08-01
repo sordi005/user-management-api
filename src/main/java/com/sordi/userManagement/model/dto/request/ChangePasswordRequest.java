@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 /**
  * DTO for changing user password.
  * Used when an authenticated user wants to change their password.
- *
- * @author Santiago Sordi
- * @version 1.0
  */
 @Data
 @NoArgsConstructor

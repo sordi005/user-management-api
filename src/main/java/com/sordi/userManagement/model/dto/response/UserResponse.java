@@ -41,12 +41,11 @@ public class UserResponse {
     private String firstName;
 
     private String lastName;
+
     /**
      * Nombre completo del usuario (campo calculado)
      */
     private String fullName;
-
-
 
     /**
      * Fecha de creación de la cuenta
@@ -61,7 +60,6 @@ public class UserResponse {
      */
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private LocalDateTime updatedAt;
-
 
     /**
      * Constructor personalizado para crear una respuesta básica de usuario
