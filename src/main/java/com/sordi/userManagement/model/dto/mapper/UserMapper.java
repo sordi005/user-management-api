@@ -30,6 +30,7 @@ public interface UserMapper {
 
     @Mappings({
             @Mapping(target = "id", ignore = true), // Este campo no debe mappearse
+            @Mapping(target = "dni", ignore = true), // DNI no se puede actualizar
             @Mapping(target = "createdAt", ignore = true),
             @Mapping(target = "updatedAt", ignore = true),
             @Mapping(target = "username", ignore = true),
