@@ -31,6 +31,7 @@ public class UpdateUserRequest {
     @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;
 
+
     @Email(message = "Invalid email format")
     @Size(max = 100, message = "Email must be less than 100 characters")
     private String email;
