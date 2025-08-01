@@ -43,7 +43,7 @@ public class JwtTokenProvider {
             log.info("JwtTokenProvider inicializado correctamente");
         } catch (Exception e) {
             log.error("Error inicializando JwtTokenProvider: {}", e.getMessage());
-            throw new BusinessException("Error inicializando el proveedor de tokens JWT");
+            throw new IllegalArgumentException("Error inicializando el proveedor de tokens JWT");
         }
     }
 
@@ -93,7 +93,7 @@ public class JwtTokenProvider {
     public String generateToken(String username) {
         // Validación de entrada
         if (username == null || username.trim().isEmpty()) {
-            throw new BusinessException("No se puede generar token sin username");
+            throw new IllegalArgumentException("No se puede generar token sin username");
         }
         try {
             Date now = new Date();
@@ -111,7 +111,7 @@ public class JwtTokenProvider {
 
         } catch (Exception e) {
             log.error("Error generando token JWT para usuario {}: {}", username, e.getMessage());
-            throw new BusinessException("Error generando token de autenticación");
+            throw new RuntimeException("Error generando token de autenticación");
         }
     }
 
@@ -154,7 +154,7 @@ public class JwtTokenProvider {
      */
     public String generateRefreshToken(String username) {
         if (username == null || username.trim().isEmpty()) {
-            throw new BusinessException("No se puede generar refresh token sin username");
+            throw new IllegalArgumentException("No se puede generar refresh token sin username");
         }
 
         try {
@@ -172,7 +172,7 @@ public class JwtTokenProvider {
 
         } catch (Exception e) {
             log.error("Error generando refresh token para usuario {}: {}", username, e.getMessage());
-            throw new BusinessException("Error generando refresh token");
+            throw new RuntimeException("Error generando refresh token");
         }
     }
 
