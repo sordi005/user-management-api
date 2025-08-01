@@ -13,9 +13,7 @@ import java.util.Optional;
  *
  * Provides CRUD operations and custom queries for User management.
  * Extends JpaRepository which provides basic CRUD operations.
- *
- * @author Santiago Sordi
- * @version 1.0
+
  */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -43,6 +41,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return true if user exists, false otherwise
      */
     boolean existsByEmail(String email);
+
+    /**
+     * Check if a user exists with the given DNI.
+     *
+     * @param dni the DNI to check
+     * @return true if user exists, false otherwise
+     */
+    boolean existsByDni(String dni);
 
     /**
      * Check if a user exists with the given username.
