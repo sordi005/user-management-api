@@ -2,16 +2,18 @@ package com.sordi.userManagement.model.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 /**
- * Respuesta de autenticación JWT siguiendo estándares OAuth2 y de la industria.
+ * Respuesta de autenticación JWT siguiendo estándares OAuth2 e industriales.
  * Se usa después de operaciones exitosas de login o renovación de token.
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class JwtResponse {
@@ -46,18 +48,8 @@ public class JwtResponse {
     private String scope;
 
     /**
-     * Momento en que el token fue emitido
+     * Cuándo se emitió el token
      */
     @JsonProperty("issued_at")
     private LocalDateTime issuedAt;
-
-    /**
-     * Constructor para respuesta JWT básica
-     */
-    public JwtResponse(String accessToken, long expiresIn) {
-        this.accessToken = accessToken;
-        this.tokenType = "Bearer";
-        this.expiresIn = expiresIn;
-        this.issuedAt = LocalDateTime.now();
-    }
 }
