@@ -10,9 +10,6 @@ import java.time.LocalDate;
 /**
  * DTO for updating user information.
  * All fields are optional - only provided fields will be updated.
- *
- * @author Santiago Sordi
- * @version 1.0
  */
 @Data
 @NoArgsConstructor
