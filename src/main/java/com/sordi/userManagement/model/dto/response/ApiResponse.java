@@ -8,105 +8,136 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-
 /**
- * Standard API response wrapper for all REST endpoints.
- * Provides consistent response format across the entire application.
+ * Envoltura estándar para las respuestas API de todos los endpoints REST.
+ * Proporciona un formato de respuesta consistente en toda la aplicación.
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@Data  // Anotación de Lombok para generar automáticamente getters, setters, equals, hashCode y toString
+@NoArgsConstructor  // Lombok: genera constructor sin argumentos
+@AllArgsConstructor  // Lombok: genera constructor con todos los argumentos
+@JsonInclude(JsonInclude.Include.NON_NULL)  // Ignora campos nulos al serializar a JSON
 public class ApiResponse<T> {
 
     /**
-     * Indicates if the operation was successful
+     * Indica si la operación fue exitosa
      */
     private boolean success;
 
     /**
-     * Human-readable message describing the result
+     * Mensaje legible por humanos que describe el resultado
      */
     private String message;
 
     /**
-     * The actual data payload (null for errors)
+     * Datos principales de la respuesta (null en caso de errores)
      */
     private T data;
 
     /**
-     * HTTP status code
+     * Código de estado HTTP
      */
-    @JsonProperty("status_code")
+    @JsonProperty("status_code")  // Nombre personalizado en el JSON
     private int statusCode;
 
     /**
-     * Timestamp when the response was created
+     * Marca de tiempo cuando se creó la respuesta
      */
-    @JsonProperty("time_stamp")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    @JsonProperty("time_stamp")  // Nombre personalizado en el JSON
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")  // Formato de fecha
     private LocalDateTime timestamp;
 
     /**
-     * Error details (only present when success = false)
+     * Detalles del error (solo presente cuando success = false)
      */
     private String error;
 
-    // Static factory methods for convenience
+    // ======================
+    // Métodos de fábrica estáticos
+    // ======================
 
     /**
-     * Creates a successful response with data
+     * Crea una respuesta exitosa con datos
+     * @param <T> Tipo de los datos
+     * @param data Datos a incluir en la respuesta
+     * @param message Mensaje descriptivo
+     * @param statusCode Código HTTP (ej: 200)
+     * @return Instancia de ApiResponse configurada
      */
     public static <T> ApiResponse<T> success(T data, String message, int statusCode) {
         return new ApiResponse<>(
-            true,
-            message,
-            data,
-            statusCode,
-            LocalDateTime.now(),
-            null
+                true,           // Operación exitosa
+                message,        // Mensaje personalizado
+                data,           // Datos de respuesta
+                statusCode,     // Código HTTP
+                LocalDateTime.now(),  // Timestamp actual
+                null            // Sin errores
         );
     }
 
     /**
-     * Creates a successful response with data and default message
+     * Crea una respuesta exitosa con datos y mensaje por defecto
+     * @param <T> Tipo de los datos
+     * @param data Datos a incluir
+     * @return Instancia de ApiResponse con mensaje por defecto
      */
     public static <T> ApiResponse<T> success(T data) {
-        return success(data, "Operation completed successfully", 200);
+        return success(
+                data,
+                "Operation completed successfully",  // Mensaje por defecto
+                200  // HTTP 200 OK
+        );
     }
 
     /**
-     * Creates a successful response without data
+     * Crea una respuesta exitosa sin datos (solo mensaje)
+     * @param <T> Tipo genérico
+     * @param message Mensaje descriptivo
+     * @param statusCode Código HTTP
+     * @return Instancia de ApiResponse sin datos
      */
     public static <T> ApiResponse<T> success(String message, int statusCode) {
         return new ApiResponse<>(
-            true,
-            message,
-            null,
-            statusCode,
-            LocalDateTime.now(),
-            null
+                true,  / Operación exitosa
+                message,        // Mensaje proporcionado
+                null,           // Sin datos
+                statusCode,     // Código HTTP
+                LocalDateTime.now(),  // Timestamp actual
+                null            // Sin errores
         );
     }
 
     /**
-     * Creates an error response
+     * Crea una respuesta de error
+     * @param <T> Tipo genérico
+     * @param message Mensaje descriptivo del error
+     * @param error Detalles técnicos del error
+     * @param statusCode Código HTTP de error (ej: 400, 500)
+     * @return Instancia de ApiResponse configurada como error
      */
     public static <T> ApiResponse<T> error(String message, String error, int statusCode) {
         return new ApiResponse<>(
-            false,
-            message,
-            null,
-            statusCode,
-            LocalDateTime.now(),
-            error
+                false,          // Operación fallida
+                message,        // Mensaje de error
+                null,           // Sin datos
+                statusCode,     // Código HTTP de error
+                LocalDateTime.now(),  // Timestamp actual
+                error           // Detalles del error
         );
     }
 
     /**
-     * Creates an error response with default message
+     * Crea una respuesta de error con mensaje por defecto
+     * @param <T> Tipo genérico
+     * @param error Detalles técnicos del error
+     * @param statusCode Código HTTP de error
+     * @return Instancia de ApiResponse con mensaje por defecto
      */
     public static <T> ApiResponse<T> error(String error, int statusCode) {
-        return error("Operation failed", error, statusCode);
+        return error(
+                "Operation failed",  // Mensaje por defecto
+                error,              // Detalles del error
+                statusCode          // Código HTTP
+        );
     }
+}
 }
