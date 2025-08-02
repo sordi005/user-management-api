@@ -36,7 +36,7 @@ public class UserService {
      * @return Respuesta con los datos del usuario creado
      */
     @Transactional
-    public UserResponse registerUser(CreateUserRequest request) {
+    public UserResponse createUser(CreateUserRequest request) {
         log.info("Iniciando creación de usuario con username: {}", request.getUsername());
 
         // Validaciones con logging
