@@ -1,6 +1,5 @@
 package com.sordi.userManagement.config;
 
-import com.sordi.userManagement.repository.UserRepository;
 import com.sordi.userManagement.security.CustomUserDetailsService;
 import com.sordi.userManagement.security.JwtAuthenticationFilter;
 import com.sordi.userManagement.security.JwtTokenProvider;
@@ -11,13 +10,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import java.security.PublicKey;
 
 /**
  * Configuración de seguridad para la aplicación.
@@ -56,7 +55,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             // Deshabilitar Cross-Site Request Forgery (CSRF)
-            .csrf(csrf -> csrf.disable())
+            .csrf(AbstractHttpConfigurer::disable)
 
             // Configurar sesiones como STATELESS (para JWT)
             // No guardamos estado en el servidor
@@ -71,23 +70,23 @@ public class SecurityConfig {
 
                 // ENDPOINTS OPCIONALES
                 .requestMatchers("/swagger-ui/**").permitAll()         //  Documentación Swagger
-                //.requestMatchers("/v3/api-docs/**").permitAll()        //  Datos para Swagger
-                //.requestMatchers("/actuator/**").permitAll()           //  Monitoreo de aplicación
+                .requestMatchers("/v3/api-docs/**").permitAll()        //  Datos para Swagger
+                .requestMatchers("/actuator/**").permitAll()           //  Monitoreo de aplicación
 
                 // ENDPOINTS PRIVADOS (requieren autenticación)
                 .anyRequest().authenticated()
             )
 
-            /**
-             * Configurar el filtro de autenticación JWT.
-             * Este filtro intercepta las solicitudes y verifica el token JWT.
-             * Si el token es válido, permite el acceso al recurso solicitado
-             */
+            // Configurar el filtro de autenticación JWT
+            // Este filtro intercepta las solicitudes y verifica el token JWT
+            // Si el token es válido, permite el acceso al recurso solicitado
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
 
             // Configurar headers para H2 console (solo desarrollo)
             // H2 usa frames y Spring Security los bloquea por defecto
-            .headers(headers -> headers.frameOptions().disable());
+            .headers(headers -> headers
+                .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
+            );
 
         return http.build();
     }
