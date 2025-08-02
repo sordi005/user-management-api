@@ -66,7 +66,7 @@ public class SecurityConfig {
             // Configurar qué endpoints requieren autenticación
             .authorizeHttpRequests(auth -> auth
                 // ENDPOINTS PÚBLICOS (sin autenticación)
-                .requestMatchers("/api/v1/auth/**").permitAll()        // Login, register
+                .requestMatchers("/api/auth/**").permitAll()        // Login, register
                 .requestMatchers("/h2-console/**").permitAll()         // Base de datos H2 - solo desarrollo
 
                 // ENDPOINTS OPCIONALES
