@@ -97,7 +97,7 @@ public class ApiResponse<T> {
      */
     public static <T> ApiResponse<T> success(String message, int statusCode) {
         return new ApiResponse<>(
-                true,  / Operación exitosa
+                true,           // Operación exitosa
                 message,        // Mensaje proporcionado
                 null,           // Sin datos
                 statusCode,     // Código HTTP
