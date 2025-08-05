@@ -57,18 +57,19 @@ public class AuthService {
                     return new RuntimeException("Error interno de autenticación");
                 });
 
-            //  Generar JWT token
-            String token = jwtTokenProvider.generateToken(user.getUsername());
+            //  Generar JWT token y refresh token
+            String accessToken = jwtTokenProvider.generateToken(user.getUsername());
+            String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
 
             log.info("Login exitoso para usuario: {}", user.getUsername());
 
             // Crear y retornar respuesta
             return JwtResponse.builder()
-                .accessToken(token)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .tokenType("Bearer")             // Tipo de token
                 .expiresIn(jwtConfig.getExpirationInSeconds())// Tiempo de expiración en segundos
                 .issuedAt(LocalDateTime.now())   // Cuándo se emitió
-                // refreshToken se puede agregar después si es necesario
                 .build();
 
         } catch (AuthenticationException e) {
@@ -139,6 +140,54 @@ public class AuthService {
         } catch (Exception e) {
             log.error("Error al verificar credenciales: {}", e.getMessage(), e);
             return false;
+        }
+    }
+
+    /**
+     * Renueva un access token usando un refresh token válido
+     * @param refreshToken refresh token válido
+     * @return nuevo JwtResponse con access token renovado
+     */
+    public JwtResponse refreshToken(String refreshToken) {
+        log.info("Intento de renovación de token");
+
+        try {
+            // Validar que el refresh token sea válido
+            if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+                log.warn("Refresh token inválido o expirado");
+                throw new BusinessException("Refresh token inválido o expirado");
+            }
+
+            // Extraer username del refresh token
+            String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
+
+            // Verificar que el usuario aún existe en la BD
+            User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> {
+                    log.warn("Usuario del refresh token no encontrado: {}", username);
+                    return new BusinessException("Usuario no encontrado");
+                });
+
+            // Generar nuevo access token (y opcionalmente nuevo refresh token)
+            String newAccessToken = jwtTokenProvider.generateToken(user.getUsername());
+            String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
+
+            log.info("Token renovado exitosamente para usuario: {}", username);
+
+            // Retornar nueva respuesta con tokens renovados
+            return JwtResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtConfig.getExpirationInSeconds())
+                .issuedAt(LocalDateTime.now())
+                .build();
+
+        } catch (BusinessException e) {
+            throw e; // Re-lanzar excepciones de negocio
+        } catch (Exception e) {
+            log.error("Error inesperado renovando token: {}", e.getMessage(), e);
+            throw new BusinessException("Error interno renovando token");
         }
     }
 
