@@ -37,9 +37,15 @@ public class UserService {
      */
     @Transactional
     public UserResponse createUser(CreateUserRequest request) {
+
+        if (request == null) {
+            log.error("Los datos de usuario son requeridos para crear un nuevo usuario");
+            throw new IllegalArgumentException("Datos de usuario son requeridos");
+        }
+
         log.info("Iniciando creación de usuario con username: {}", request.getUsername());
 
-        // Validaciones con logging
+        // Validaciones de duplicados (lógica de negocio)
         if(userRepository.existsByUsername(request.getUsername())) {
             log.warn("Intento de registro fallido: Username '{}' ya existe", request.getUsername());
             throw new BusinessException("Nombre de usuario ya esta en uso");
@@ -53,14 +59,17 @@ public class UserService {
             throw new BusinessException("DNI existente");
         }
 
+        // Validación de rol (lógica de negocio)
+        validateRole(request.getRole());
+
         try {
             User user = userMapper.toEntity(request);
             user.setPassword(passwordEncoder.encode(request.getPassword()));
 
             User savedUser = userRepository.save(user);
 
-            log.info("Usuario creado exitosamente con ID: {} y username: {}",
-                    savedUser.getId(), savedUser.getUsername());
+            log.info("Usuario creado exitosamente con ID: {} y username: {} con rol: {}",
+                    savedUser.getId(), savedUser.getUsername(), savedUser.getRole());
 
             return userMapper.toResponse(savedUser);
 
@@ -81,6 +90,7 @@ public class UserService {
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
         log.info("Iniciando actualización de usuario con ID: {}", id);
 
+        // Validaciones básicas
         if (id == null || request == null) {
             throw new IllegalArgumentException("ID de usuario y datos de actualización son requeridos");
         }
@@ -94,13 +104,9 @@ public class UserService {
 
         log.debug("Usuario encontrado para actualización: {}", userExisting.getUsername());
 
-        // Validar email único si se está cambiando
-        if (request.getEmail() != null && !request.getEmail().equals(userExisting.getEmail())) {
-            if (userRepository.existsByEmail(request.getEmail())) {
-                log.warn("Intento de actualizar con email duplicado: {}", request.getEmail());
-                throw new BusinessException("El email ya está en uso por otro usuario");
-            }
-        }
+        // Validaciones de unicidad para los campos que SÍ se pueden actualizar
+        validateUniqueFieldsForUpdate(request, userExisting);
+
         try {
             // Actualizar usando mapper
             userMapper.updateEntity(userExisting, request);
@@ -116,22 +122,33 @@ public class UserService {
         }
     }
 
+
     /**
      * Eliminar un usuario por ID
      * @param id ID del usuario a eliminar
      */
     @Transactional
-    public void deleteUser(Long id) {
+    public void deleteUser(Long id)  {
         log.info("Iniciando eliminación de usuario con ID: {}", id);
+
+        // Validaciones básicas
         if (id == null) throw new IllegalArgumentException("ID de usuario es requerido para eliminar");
-        if (!userRepository.existsById(id)) {
-            log.warn("Intento de eliminar usuario inexistente con ID: {}", id);
-            throw new ResourceNotFoundException("Usuario con ID " + id + " no encontrado");
-        }
-        log.debug("Usuario encontrado para eliminación ID: {}", id);
+
+        // Verificar que el usuario existe
+        User userToDelete = userRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Intento de eliminar usuario inexistente con ID: {}", id);
+                    return new ResourceNotFoundException("Usuario con ID " + id + " no encontrado");
+                });
+
+        // Validación: No eliminar el último ADMIN
+        validateNotLastAdmin(userToDelete);
+
+        log.debug("Usuario encontrado para eliminación: {} ({})", userToDelete.getUsername(), userToDelete.getRole());
+
         try{
             userRepository.deleteById(id);
-            log.info("Usuario eliminado exitosamente con ID: {}", id);
+            log.info("Usuario eliminado exitosamente: {} con ID: {}", userToDelete.getUsername(), id);
         }catch (Exception e) {
             log.error("Error inesperado al eliminar usuario con ID: {}", id, e.getMessage(), e);
             throw new RuntimeException("Error interno al eliminar usuario");
@@ -151,6 +168,21 @@ public class UserService {
                     return new ResourceNotFoundException("Usuario con ID " + id + " no encontrado");
                 });
 
+        return userMapper.toResponse(user);
+    }
+
+    /**
+     * Obtener un usuario por su username
+     * @param username nombre de usuario a buscar
+     * @return DTO de respuesta con los datos del usuario
+     */
+    public UserResponse getUserByUsername(String username) {
+        log.info("Obteniendo usuario por username: {}", username);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> {
+                    log.warn("Usuario con username '{}' no encontrado", username);
+                    return new ResourceNotFoundException("Usuario con username " + username + " no encontrado");
+                });
         return userMapper.toResponse(user);
     }
 
@@ -192,7 +224,7 @@ public class UserService {
      * @param size tamaño de página
      * @return página de usuarios que coincidan
      */
-    public Page<UserResponse> searchUsersByUsername(String firstName, int page, int size) {
+    public Page<UserResponse> searchUsersByName(String firstName, int page, int size) {
         log.info("Buscando usuarios por nombre: '{}' - Página: {}, Tamaño: {}", firstName, page, size);
 
         try {
@@ -207,14 +239,44 @@ public class UserService {
             throw new BusinessException("Error interno en búsqueda");
         }
     }
-    public UserResponse getUserByUsername(String username) {
-        log.info("Obteniendo usuario por username: {}", username);
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> {
-                    log.warn("Usuario con username '{}' no encontrado", username);
-                    return new ResourceNotFoundException("Usuario con username " + username + " no encontrado");
-                });
-        return userMapper.toResponse(user);
+
+
+    /**
+     * Validar que el rol sea válido
+     */
+    private void validateRole(String role) {
+        if (role == null || role.trim().isEmpty()) {
+            throw new BusinessException("El rol es requerido");
+        }
+
+        if (!role.equals("USER") && !role.equals("ADMIN")) {
+            log.warn("Intento de asignar rol inválido: {}", role);
+            throw new BusinessException("Rol inválido. Solo se permiten: USER, ADMIN");
+        }
     }
 
+    /**
+     * Validar campos únicos para actualización
+     */
+    private void validateUniqueFieldsForUpdate(UpdateUserRequest request, User existingUser) {
+        // Validar email único si se está cambiando
+        if (request.getEmail() != null && !request.getEmail().equals(existingUser.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                log.warn("Intento de actualizar con email duplicado: {}", request.getEmail());
+                throw new BusinessException("El email ya está en uso por otro usuario");
+            }
+        }
+    }
+    /**
+     * Validar que no se elimine el último administrador
+     */
+    private void validateNotLastAdmin(User userToDelete) {
+        if ("ADMIN".equals(userToDelete.getRole().toString())) {
+            long adminCount = userRepository.countByRole(userToDelete.getRole());
+            if (adminCount <= 1) {
+                log.warn("Intento de eliminar el último administrador: {}", userToDelete.getUsername());
+                throw new BusinessException("No se puede eliminar el último administrador del sistema");
+            }
+        }
+    }
 }
