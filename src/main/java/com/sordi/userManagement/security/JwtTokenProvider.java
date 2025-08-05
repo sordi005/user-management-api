@@ -199,23 +199,29 @@ public class JwtTokenProvider {
     }
 
     /**
-     * Verifica si un token es de tipo refresh.
+     * Valida si un refresh token es válido y es realmente un refresh token.
      *
-     * @param token token JWT a verificar
-     * @return true si es refresh token, false en caso contrario
+     * @param refreshToken token de refresco a validar
+     * @return true si el refresh token es válido, false en caso contrario
      */
-    public boolean isRefreshToken(String token) {
+    public boolean validateRefreshToken(String refreshToken) {
+        if (!validateToken(refreshToken)) {
+            return false;
+        }
+
         try {
             Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
-                .parseSignedClaims(token)
+                .parseSignedClaims(refreshToken)
                 .getPayload();
 
-            return "refresh".equals(claims.get("type", String.class));
+            // Verificar que sea un refresh token
+            String tokenType = claims.get("type", String.class);
+            return "refresh".equals(tokenType);
 
         } catch (Exception e) {
-            log.error("Error verificando tipo de token: {}", e.getMessage());
+            log.warn("Error validando refresh token: {}", e.getMessage());
             return false;
         }
     }
