@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,15 +42,14 @@ public class AuthController {
         logger.info("Iniciando registro de usuario con username: {}", request.getUsername());
 
         // Crear el usuario usando el servicio
-        UserResponse newUser = userService.createUser(request);
+        UserResponse userResponse = userService.createUser(request);
 
-        // Log del éxito
         logger.info("Usuario registrado exitosamente con ID: {} y username: {}",
-                   newUser.getId(), newUser.getUsername());
+                userResponse.getId(), userResponse.getUsername());
 
         // Usar el método estático para crear respuesta completa
         ApiResponse<UserResponse> response = ApiResponse.success(
-            newUser,
+            userResponse,
             "Usuario registrado exitosamente",
             HttpStatus.CREATED.value()
         );
