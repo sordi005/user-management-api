@@ -1,0 +1,42 @@
+spring:
+  profiles:
+    active: test
+
+  # Base de datos H2 en memoria para tests
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # JPA configuración para tests
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # Crea y elimina schema en cada test
+    show-sql: false          # No mostrar SQL en tests (opcional: true para debug)
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # Flyway deshabilitado para tests (usamos ddl-auto)
+  flyway:
+    enabled: false
+
+# Configuración de logging para tests
+logging:
+  level:
+    com.sordi.userManagement: DEBUG
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+    org.hibernate: WARN
+
+# JWT configuración para tests
+jwt:
+  secret: testSecretKeyForJunitTestsOnlyNotForProduction123456789
+  expiration-ms: 3600000  # 1 hora
+
+# Configuración específica para tests
+test:
+  data:
+    load-fixtures: true
