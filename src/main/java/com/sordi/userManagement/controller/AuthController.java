@@ -2,6 +2,7 @@ package com.sordi.userManagement.controller;
 
 import com.sordi.userManagement.model.dto.request.CreateUserRequest;
 import com.sordi.userManagement.model.dto.request.LoginRequest;
+import com.sordi.userManagement.model.dto.request.RefreshTokenRequest;
 import com.sordi.userManagement.model.dto.response.ApiResponse;
 import com.sordi.userManagement.model.dto.response.JwtResponse;
 import com.sordi.userManagement.model.dto.response.UserResponse;
@@ -40,7 +41,7 @@ public class AuthController {
         logger.info("Iniciando registro de usuario con username: {}", request.getUsername());
 
         // Crear el usuario usando el servicio
-        UserResponse newUser = userService.registerUser(request);
+        UserResponse newUser = userService.createUser(request);
 
         // Log del éxito
         logger.info("Usuario registrado exitosamente con ID: {} y username: {}",
@@ -80,6 +81,30 @@ public class AuthController {
         );
 
         // Devolver HTTP 200 OK
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Renueva un access token usando un refresh token válido
+     * @param request solicitud con el refresh token
+     * @return Respuesta con nuevos tokens
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<JwtResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        logger.info("Intento de renovación de token");
+
+        // Renovar tokens usando AuthService
+        JwtResponse jwtResponse = authService.refreshToken(request.getRefreshToken());
+
+        logger.info("Token renovado exitosamente");
+
+        // Crear respuesta exitosa
+        ApiResponse<JwtResponse> response = ApiResponse.success(
+            jwtResponse,
+            "Token renovado exitosamente",
+            HttpStatus.OK.value()
+        );
+
         return ResponseEntity.ok(response);
     }
 }
