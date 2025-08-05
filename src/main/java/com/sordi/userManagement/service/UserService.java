@@ -162,7 +162,7 @@ public class UserService {
      */
     public Page<UserResponse> getAllUsers(int page, int size) {
         log.info("Obteniendo usuarios - Página: {}, Tamaño: {}", page, size);
-        if (page <= 0 || size <= 0)  {
+        if (page < 0 || size <= 0)  {
             log.warn("Parámetros de paginación inválidos - Página: {}, Tamaño: {}", page, size);
             throw new BusinessException("Parámetros de paginación inválidos");
         }
