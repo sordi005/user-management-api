@@ -11,11 +11,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@RestController                    // Dice a Spring: "Esta clase maneja peticiones HTTP"
-@RequestMapping("/api/users")      // Todas las URLs empiezan con /api/users
-@RequiredArgsConstructor          // Lombok crea constructor automáticamente
-@Slf4j                           // Lombok crea un logger llamado 'log'
-@Validated                       // Habilita validaciones automáticas
+@RestController                    // Controlador REST para manejar usuarios
+@RequestMapping("/api/users")     //uRL base para los endpoints de usuario
+@RequiredArgsConstructor
+@Slf4j
+@Validated
 public class UserController {
     
     private final UserService userService;
@@ -64,7 +64,7 @@ public class UserController {
      * URL: DELETE /api/users/123
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")  // Cambiado a USER por simplicidad
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         log.info("Eliminando usuario con ID: {}", id);
         userService.deleteUser(id);
