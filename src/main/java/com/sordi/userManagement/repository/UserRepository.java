@@ -1,5 +1,6 @@
 package com.sordi.userManagement.repository;
 
+import com.sordi.userManagement.model.Role;
 import com.sordi.userManagement.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -83,4 +84,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return página de usuarios
      */
     Page<User> findByEmailContainingIgnoreCase(String email, Pageable pageable);
+
+    /**
+     * Contar usuarios por rol
+     * @param role el rol a contar
+     * @return cantidad de usuarios con ese rol
+     */
+    long countByRole(Role role);
+
+    /**
+     * Buscar usuarios por rol
+     * @param role el rol a buscar
+     * @return lista de usuarios con ese rol
+     */
+    java.util.List<User> findByRole(Role role);
 }
