@@ -8,7 +8,11 @@ echo 🔍 Validando variables de entorno...
 REM Cargar variables del archivo .env si existe
 if exist .env (
     echo 📄 Cargando variables desde .env...
-    for /f "delims=" %%x in (.env) do (set "%%x")
+    for /f "eol=# tokens=1,2 delims==" %%a in (.env) do (
+        if not "%%b"=="" (
+            set "%%a=%%b"
+        )
+    )
 )
 
 echo.
@@ -86,6 +90,12 @@ if "%SPRING_PROFILES_ACTIVE%"=="" (
     echo ✅ SPRING_PROFILES_ACTIVE - %SPRING_PROFILES_ACTIVE%
 )
 
+if "%SHOW_SQL%"=="" (
+    echo ⚠️  SHOW_SQL - Usando valor por defecto: false
+) else (
+    echo ✅ SHOW_SQL - %SHOW_SQL%
+)
+
 echo.
 if %missing_vars%==0 (
     echo 🎉 ¡Todas las variables están configuradas correctamente!
@@ -94,13 +104,14 @@ if %missing_vars%==0 (
     echo    - Base de datos: %DB_USERNAME%@%DB_HOST%:%DB_PORT%/%DB_NAME%
     echo    - Perfil activo: %SPRING_PROFILES_ACTIVE%
     echo    - Puerto servidor: %SERVER_PORT%
+    echo    - Mostrar SQL: %SHOW_SQL%
     echo.
     echo ✅ Listo para ejecutar: mvnw spring-boot:run
 ) else (
     echo ❌ Se encontraron %missing_vars% problema(s) de configuración
     echo.
     echo 🔧 Para solucionarlo:
-    echo    1. Crea/edita el archivo .env
+    echo    1. Verifica el archivo .env
     echo    2. Consulta la documentación en README.md
 )
 
