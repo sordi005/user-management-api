@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +26,7 @@ public class UserController {
      * URL: GET /api/users?page=0&size=10
      */
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<UserResponse>> getAllUsers(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "10") Integer size
@@ -40,7 +41,7 @@ public class UserController {
      * URL: GET /api/users/123
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         log.info("Obteniendo usuario con ID: {}", id);
         UserResponse usuario = userService.getUserById(id);
@@ -52,7 +53,7 @@ public class UserController {
      * URL: PUT /api/users/123
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody UpdateUserRequest request) {
         log.info("Actualizando usuario con ID: {}", id);
         UserResponse updatedUser = userService.updateUser(id, request);
@@ -64,10 +65,22 @@ public class UserController {
      * URL: DELETE /api/users/123
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         log.info("Eliminando usuario con ID: {}", id);
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();  // HTTP 204 No Content
+    }
+
+    /**
+     * Método para obtener el perfil del usuario autenticado
+     * URL: GET /api/users/me
+     */
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
+        log.info("Obteniendo perfil de usuario autenticado: {}", authentication.getName());
+        UserResponse user = userService.getUserByUsername(authentication.getName());
+        return ResponseEntity.ok(user);
     }
 }

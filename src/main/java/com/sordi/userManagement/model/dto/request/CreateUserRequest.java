@@ -59,4 +59,7 @@ public class CreateUserRequest {
         message = "Password must contain at least one lowercase letter, one uppercase letter, one digit and one special character"
     )
     private String password;
+
+    // Campo role opcional - por defecto será USER
+    private String role = "USER"; // Puede ser "USER" o "ADMIN"
 }

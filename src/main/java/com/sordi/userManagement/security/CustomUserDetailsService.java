@@ -46,7 +46,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User.builder()
             .username(user.getUsername())
             .password(user.getPassword()) // Ya viene encriptada de la BD
-            .authorities("ROLE_USER") // Roles del usuario
+            .authorities("ROLE_" + user.getRole().name()) // Usar rol dinámico desde BD
             .accountExpired(false) // La cuenta no está expirada
             .accountLocked(false) // La cuenta no está bloqueada
             .credentialsExpired(false) // Las credenciales no están expiradas

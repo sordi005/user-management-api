@@ -73,6 +73,10 @@ public class SecurityConfig {
                 .requestMatchers("/v3/api-docs/**").permitAll()        //  Datos para Swagger
                 .requestMatchers("/actuator/**").permitAll()           //  Monitoreo de aplicación
 
+                // ENDPOINTS PRIVADOS CON ROLES
+                .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")  // Usuarios autenticados
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")             // Solo administradores
+
                 // ENDPOINTS PRIVADOS (requieren autenticación)
                 .anyRequest().authenticated()
             )

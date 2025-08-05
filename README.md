@@ -113,6 +113,35 @@ Una vez iniciada la aplicación, la documentación interactiva estará disponibl
 - **OpenAPI JSON**: http://localhost:8086/v3/api-docs
 
 ## 🧪 Testing
+
+### Usuarios de Prueba Pre-configurados
+El sistema incluye usuarios de prueba que se crean automáticamente:
+
+| Usuario | Contraseña | Rol | Descripción |
+|---------|------------|-----|-------------|
+| `admin` | `Admin123!` | ADMIN | Usuario administrador |
+| `juan` | `User123!` | USER | Usuario regular |
+| `maria` | `User123!` | USER | Usuario regular |
+
+### Testing con Postman (Recomendado)
+1. **Importar colección**: Importa el archivo `postman/User_Management_API.postman_collection.json`
+2. **Login automático**: Usa los requests "Login Admin" o "Login User Juan"
+   - ✅ **El token se guarda automáticamente** - no necesitas copiarlo manualmente
+3. **Testear endpoints**: Todos los demás requests usarán el token automáticamente
+
+### Testing Manual
+```bash
+# 1. Login como admin
+curl -X POST http://localhost:8086/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"Admin123!"}'
+
+# 2. Usar el token en requests (reemplaza TOKEN_AQUI)
+curl -X GET http://localhost:8086/api/users/me \
+  -H "Authorization: Bearer TOKEN_AQUI"
+```
+
+### Ejecutar Tests Unitarios
 ```bash
 # Ejecutar todos los tests
 ./mvnw test
@@ -120,7 +149,6 @@ Una vez iniciada la aplicación, la documentación interactiva estará disponibl
 # Test con cobertura
 ./mvnw test jacoco:report
 ```
-
 ## 📊 Monitoreo
 - **Health Check**: http://localhost:8086/actuator/health
 - **Métricas**: http://localhost:8086/actuator/metrics
@@ -199,7 +227,7 @@ Content-Type: application/json
 Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
 
 ## 👨‍💻 Autor
-**Tu Nombre** - [GitHub](https://github.com/tu-usuario) - [LinkedIn](https://linkedin.com/in/tu-perfil)
+**Santiago Sordi** - [GitHub](https://github.com/tu-usuario) - [LinkedIn](https://linkedin.com/in/tu-perfil)
 
 ---
 ⭐ ¡Si te gustó este proyecto, dale una estrella en GitHub!

@@ -192,7 +192,7 @@ public class UserService {
      * @param size tamaño de página
      * @return página de usuarios que coincidan
      */
-    public Page<UserResponse> searchUsersByName(String firstName, int page, int size) {
+    public Page<UserResponse> searchUsersByUsername(String firstName, int page, int size) {
         log.info("Buscando usuarios por nombre: '{}' - Página: {}, Tamaño: {}", firstName, page, size);
 
         try {
@@ -207,4 +207,14 @@ public class UserService {
             throw new BusinessException("Error interno en búsqueda");
         }
     }
+    public UserResponse getUserByUsername(String username) {
+        log.info("Obteniendo usuario por username: {}", username);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> {
+                    log.warn("Usuario con username '{}' no encontrado", username);
+                    return new ResourceNotFoundException("Usuario con username " + username + " no encontrado");
+                });
+        return userMapper.toResponse(user);
+    }
+
 }

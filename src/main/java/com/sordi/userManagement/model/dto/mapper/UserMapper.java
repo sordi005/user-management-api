@@ -1,6 +1,7 @@
 package com.sordi.userManagement.model.dto.mapper;
 
 import com.sordi.userManagement.model.User;
+import com.sordi.userManagement.model.Role;
 import com.sordi.userManagement.model.dto.request.CreateUserRequest;
 import com.sordi.userManagement.model.dto.request.UpdateUserRequest;
 import com.sordi.userManagement.model.dto.response.UserResponse;
@@ -23,7 +24,8 @@ public interface UserMapper {
     @Mappings({
             @Mapping(target = "id", ignore = true), // Este campo no debe mappearse
             @Mapping(target = "createdAt", ignore = true), // Este campo se maneja automáticamente
-            @Mapping(target = "updatedAt", ignore = true)
+            @Mapping(target = "updatedAt", ignore = true),
+            @Mapping(target = "role", expression = "java(mapStringToRole(request.getRole()))")
     })
     User toEntity(CreateUserRequest request);
 
@@ -46,4 +48,10 @@ public interface UserMapper {
         return firstName + " " + lastName;
     }
 
+    default Role mapStringToRole(String role) {
+        if (role == null) {
+            return null;
+        }
+        return Role.valueOf(role.toUpperCase());
+    }
 }
