@@ -1,0 +1,98 @@
+package com.sordi.userManagement.controller;
+
+import com.sordi.userManagement.model.dto.request.CreateUserRequest;
+import com.sordi.userManagement.model.dto.request.UpdateUserRequest;
+import com.sordi.userManagement.model.dto.response.ApiResponse;
+import com.sordi.userManagement.model.dto.response.UserResponse;
+import com.sordi.userManagement.service.UserService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+@RestController                    // Controlador REST para manejar usuarios
+@RequestMapping("/api/admin/users")     //uRL base para los endpoints de usuario
+@RequiredArgsConstructor
+@Slf4j
+@Validated
+public class AdminController {
+    private final UserService userService;
+    /**
+     * Método para crear un nuevo usuario
+     * URL: POST /api/admin/users
+     */
+    @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody @Valid CreateUserRequest request) {
+        log.info("Iniciando Creación de usuario con username: {}", request.getUsername());
+
+        UserResponse userResponse = userService.createUser(request);
+
+        log.info("Usuario registrado exitosamente con ID: {} y username: {}",
+                userResponse.getId(), userResponse.getUsername());
+
+        ApiResponse<UserResponse> apiResponse = ApiResponse.success(
+                userResponse,
+                "Usuario registrado exitosamente",
+                HttpStatus.CREATED.value()
+        );
+
+        return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
+    }
+    /**
+     * Método para obtener todos los usuarios con paginación
+     * URL: GET /api/admin/users?page=0&size=10
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserResponse>> getAllUsers(
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size
+    ) {
+        log.info("Obteniendo usuarios - Página: {}, Tamaño: {}", page, size);
+        Page<UserResponse> usuarios = userService.getAllUsers(page, size);
+        return ResponseEntity.ok(usuarios);
+    }
+
+    /**
+     * Método para obtener un usuario por su ID
+     * URL: GET /api/admin/users/123
+     */
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+        log.info("Obteniendo usuario con ID: {}", id);
+        UserResponse usuario = userService.getUserById(id);
+        return ResponseEntity.ok(usuario);
+    }
+
+    /**
+     * Método para actualizar un usuario existente
+     * URL: PUT /api/users/admin/123
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody UpdateUserRequest request) {
+        log.info("Actualizando usuario con ID: {}", id);
+        UserResponse updatedUser = userService.updateUser(id, request);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    /**
+     * Método para eliminar un usuario
+     * URL: DELETE /api/admin/users/123
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        log.info("Eliminando usuario con ID: {}", id);
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();  // HTTP 204 No Content
+    }
+
+}
