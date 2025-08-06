@@ -22,8 +22,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * Configuración de seguridad para la aplicación.
  * Define beans de seguridad, reglas de autenticación y autorización.
  */
-@Configuration
-@EnableWebSecurity
+@Configuration // Marca esta clase como una configuración de Spring
+@EnableWebSecurity // Habilita la configuración de seguridad web
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -47,6 +47,10 @@ public class SecurityConfig {
             AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtTokenProvider,customUserDetailsService);}
 
     /**
      * Bean de SecurityFilterChain - Define las reglas de seguridad de la aplicación.
@@ -94,9 +98,7 @@ public class SecurityConfig {
 
         return http.build();
     }
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtTokenProvider,customUserDetailsService);}
+
 
 
 }

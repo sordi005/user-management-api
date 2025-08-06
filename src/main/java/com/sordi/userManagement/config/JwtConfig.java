@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -15,6 +16,7 @@ import java.util.Date;
  * Propiedades de configuración para JWT.
  * Lee la configuración JWT desde application.yml y la proporciona a otros componentes.
  */
+@Slf4j
 @Component
 @ConfigurationProperties(prefix = "jwt")
 @Validated
@@ -34,14 +36,14 @@ public class JwtConfig {
      * Por defecto: 24 horas (86400000 ms)
      */
     @Positive(message = "El tiempo de expiración JWT debe ser positivo")
-    private long expiration;
+    private Long expiration;
 
     /**
      * Tiempo de expiración del refresh token en milisegundos.
      * Por defecto: 7 días (604800000 ms)
      */
     @Positive(message = "El tiempo de expiración del refresh token debe ser positivo")
-    private long refreshExpiration;
+    private Long refreshExpiration;
 
     /**
      * Valida la configuración después de que las propiedades son cargadas.
@@ -50,12 +52,15 @@ public class JwtConfig {
     @PostConstruct
     public void validateConfig() {
         if (secret != null && secret.length() < 32) {
+            log.warn("La clave JWT debe tener al menos 32 caracteres por seguridad. Longitud actual: {}", secret.length());
             throw new IllegalArgumentException(
                 "La clave JWT debe tener al menos 32 caracteres por seguridad. Longitud actual: " + secret.length()
             );
         }
 
         if (expiration > refreshExpiration) {
+            log.warn("La expiración del refresh token debe ser mayor que la del access token. " +
+                     "Access Token: {} ms, Refresh Token: {} ms", expiration, refreshExpiration);
             throw new IllegalArgumentException(
                 "La expiración del refresh token debe ser mayor que la del access token"
             );
