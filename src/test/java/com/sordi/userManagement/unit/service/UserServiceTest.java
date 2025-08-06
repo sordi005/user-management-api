@@ -78,7 +78,7 @@ public class UserServiceTest {
     @DisplayName("📝 Método CreateUser")
     class CreateUserTests {
 
-        // 📋 DATOS ESPECÍFICOS para tests de CreateUser
+        // DATOS ESPECÍFICOS para tests de CreateUser
         private CreateUserRequest validUserRequest;
 
         /**
@@ -130,11 +130,11 @@ public class UserServiceTest {
         @Test
         @DisplayName("❌ Debería lanzar BusinessException cuando el email ya existe")
         void deberiaLanzarBusinessException_CuandoElEmailYaExiste() {
-            // 🎬 PREPARAR: Simular email existente
+            //  PREPARAR: Simular email existente
             when(userRepository.existsByUsername(validUserRequest.getUsername())).thenReturn(false);
             when(userRepository.existsByEmail(validUserRequest.getEmail())).thenReturn(true);
 
-            // ⚡ EJECUTAR Y VERIFICAR: Verificar que se lance la excepción
+            //  EJECUTAR Y VERIFICAR: Verificar que se lance la excepción
             BusinessException exception = assertThrows(
                     BusinessException.class,
                     () -> userService.createUser(validUserRequest),
