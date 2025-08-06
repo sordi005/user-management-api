@@ -39,8 +39,8 @@ public class UserService {
     public UserResponse createUser(CreateUserRequest request) {
 
         if (request == null) {
-            log.error("Los datos de usuario son requeridos para crear un nuevo usuario");
-            throw new IllegalArgumentException("Datos de usuario son requeridos");
+            log.error("Los datos de registro son requeridos para crear un nuevo usuario");
+            throw new IllegalArgumentException("Datos de registro son requeridos");
         }
 
         log.info("Iniciando creación de usuario con username: {}", request.getUsername());
