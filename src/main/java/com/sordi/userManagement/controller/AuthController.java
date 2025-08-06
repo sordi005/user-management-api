@@ -23,11 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("api/auth")
 public class AuthController {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-    private final UserService userService;
     private final AuthService authService;
 
     public AuthController(UserService userService, AuthService authService) {
-        this.userService = userService;
         this.authService = authService;
         logger.info("AuthController Inicializado");
     }
@@ -42,7 +40,7 @@ public class AuthController {
         logger.info("Iniciando registro de usuario con username: {}", request.getUsername());
 
         // Crear el usuario usando el servicio
-        UserResponse userResponse = userService.createUser(request);
+        UserResponse userResponse = authService.register(request);
 
         logger.info("Usuario registrado exitosamente con ID: {} y username: {}",
                 userResponse.getId(), userResponse.getUsername());
