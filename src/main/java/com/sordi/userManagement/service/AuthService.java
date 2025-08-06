@@ -95,10 +95,13 @@ public class AuthService {
      * @return JwtResponse con el token generado
      */
     public JwtResponse login(LoginRequest loginRequest) {
-        log.info("Intento de login para usuario: {}", loginRequest.getUsername());
-        if (loginRequest == null ){
+
+        if (loginRequest == null || (loginRequest.getUsername() == null || loginRequest.getPassword() == null) ) {
+            log.error("Los datos de registro son requeridos para crear un nuevo usuario");
             throw new IllegalArgumentException("Datos de login son requeridos");
         }
+
+        log.info("Intento de login para usuario: {}", loginRequest.getUsername());
 
         try {
             Authentication authentication = authenticationManager.authenticate(

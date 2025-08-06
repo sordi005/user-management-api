@@ -28,6 +28,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -61,6 +63,9 @@ public class AuthServiceTest {
     @Mock
     private JwtConfig jwtConfig;
 
+    @Mock
+    private User mockUser; // ← Agregar @Mock aquí
+
     @InjectMocks
     private AuthService authService;
 
@@ -78,6 +83,8 @@ public class AuthServiceTest {
         validLoginRequest.setUsername("johndoe");
         validLoginRequest.setPassword("password123");
 
+        // mockUser = UserFixtures.createBasicUser(); ← Eliminar esta línea
+
         // Register
         validRegisterRequest = UserFixtures.createValidCreateUserRequest();
         mockUserResponse = UserFixtures.createUserResponse();
@@ -91,29 +98,46 @@ public class AuthServiceTest {
     @DisplayName("🔑 Método Login")
     class LoginTests {
 
+
         @Test
         @DisplayName("✅ Debería autenticar usuario exitosamente con credenciales válidas")
         void deberiaAutenticarUsuario_CuandoLasCredencialesSonValidas() {
-            // 🎬 PREPARAR: Configurar mocks para login exitoso
+            // PREPARAR: Configurar mocks para login exitoso
             String expectedToken = "jwt.token.aqui";
+            String expectedRefreshToken = "jwt.token.refresh.aqui";
             String username = "johndoe";
 
+            // Mock para AuthenticationManager
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(mockAuthentication);
-            when(mockAuthentication.getName()).thenReturn(username); // Mock para getName()
-            when(jwtTokenProvider.generateToken(username))  // Pasar username, no Authentication
-                .thenReturn(expectedToken);
+
+            // Mock para UserRepository - CRÍTICO: debe devolver el usuario
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(mockUser));
+            when(mockUser.getUsername()).thenReturn(username); // Esto es lo que realmente usa el código
+
+            // Mock para JwtTokenProvider
+            when(jwtTokenProvider.generateToken(username)).thenReturn(expectedToken);
+            when(jwtTokenProvider.generateRefreshToken(username)).thenReturn(expectedRefreshToken);
+
+            // Mock para JwtConfig
+            when(jwtConfig.getExpirationInSeconds()).thenReturn(3600L);
 
             // EJECUTAR: Intentar login
             JwtResponse response = authService.login(validLoginRequest);
 
             // VERIFICAR: Login exitoso
             assertNotNull(response, "La respuesta no debería ser null");
-            assertEquals(expectedToken, response.getAccessToken(), "El token debería coincidir");
+            assertEquals(expectedToken, response.getAccessToken(), "El access token debería coincidir");
+            assertEquals(expectedRefreshToken, response.getRefreshToken(), "El refresh token debería coincidir");
             assertEquals("Bearer", response.getTokenType(), "El tipo debería ser Bearer");
+            assertEquals(3600L, response.getExpiresIn(), "La expiración debería coincidir");
+            assertNotNull(response.getIssuedAt(), "Debería tener fecha de emisión");
 
+            // VERIFICAR: Que se llamaron los métodos correctos
             verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-            verify(jwtTokenProvider).generateToken(username); // Verificar con username
+            verify(userRepository).findByUsername(username);
+            verify(jwtTokenProvider).generateToken(username);
+            verify(jwtTokenProvider).generateRefreshToken(username);
         }
 
         @Test
@@ -157,42 +181,69 @@ public class AuthServiceTest {
     @Nested
     @DisplayName("📝 Método Register")
     class RegisterTests {
-
+        /**
+         * Caso de éxito: registro exitoso
+         */
         @Test
         @DisplayName("✅ Debería registrar usuario exitosamente")
         void deberiaRegistrarUsuario_CuandoLosDatosSonValidos() {
-            // 🎬 PREPARAR: Configurar mock de UserService
-            when(authService.register(validRegisterRequest)).thenReturn(mockUserResponse);
+            //  PREPARAR: Configurar mock de UserService
+            when(userRepository.existsByEmail(validRegisterRequest.getEmail())).thenReturn(false);
+            when(userRepository.existsByUsername(validRegisterRequest.getUsername())).thenReturn(false);
+            when(userRepository.existsByDni(validRegisterRequest.getDni())).thenReturn(false);
 
-            // ⚡ EJECUTAR: Registrar usuario
-            UserResponse result = authService.register(validRegisterRequest); // Corregido: era .re()
+            when(userMapper.toEntity(validRegisterRequest)).thenReturn(mockUser);
+            when(passwordEncoder.encode(validRegisterRequest.getPassword())).thenReturn("encodedPassword");
+            when(userRepository.save(any(User.class))).thenReturn(mockUser);
+            when(userMapper.toResponse(mockUser)).thenReturn(mockUserResponse);
 
-            // ✅ VERIFICAR: Registro exitoso
+            //  EJECUTAR: Registrar usuario
+            UserResponse result = authService.register(validRegisterRequest);
+
+            //  VERIFICAR: Registro exitoso
             assertNotNull(result, "El resultado no debería ser null");
             assertEquals(mockUserResponse.getUsername(), result.getUsername());
             assertEquals(mockUserResponse.getEmail(), result.getEmail());
 
-            verify(authService).register(validRegisterRequest);
+            verify(userRepository).existsByEmail(validRegisterRequest.getEmail());
+            verify(userRepository).existsByUsername(validRegisterRequest.getUsername());
+            verify(userRepository).existsByDni(validRegisterRequest.getDni());
+
+            verify(userMapper).toEntity(validRegisterRequest);
+            verify(passwordEncoder).encode(validRegisterRequest.getPassword());
+            verify(userRepository).save(mockUser);
+            verify(userMapper).toResponse(mockUser);
+
         }
 
+        /**
+         * Caso de error: email ya existe
+         */
         @Test
-        @DisplayName("❌ Debería propagar BusinessException del UserService")
-        void deberiaPropagar_BusinessExceptionDelUserService() {
-            // 🎬 PREPARAR: UserService lanza excepción (ej: email duplicado)
-            when(authService.register(validRegisterRequest))
-                .thenThrow(new BusinessException("Email ya esta en uso"));
+        @DisplayName("❌ Debería lanzar BusinessException cuando email ya existe")
+        void deberiaLanzarBusinessException_CuandoEmailYaExiste() {
 
-            // ⚡ EJECUTAR Y VERIFICAR: Debe propagar la excepción
+            // PREPARAR: Simular que el email ya existe
+            when(userRepository.existsByUsername(validRegisterRequest.getUsername())).thenReturn(false);
+            when(userRepository.existsByEmail(validRegisterRequest.getEmail())).thenReturn(true);
+
+            // EJECUTAR Y VERIFICAR: Debe lanzar excepción
             BusinessException exception = assertThrows(
                 BusinessException.class,
-                () -> authService.register(validRegisterRequest), // Corregido: era userService.createUser()
-                "Debería propagar BusinessException del UserService"
+                () -> authService.register(validRegisterRequest),
+                "Debería lanzar BusinessException cuando email ya existe"
             );
 
             assertEquals("Email ya esta en uso", exception.getMessage());
-            verify(authService).register(validRegisterRequest);
+            verify(userRepository).existsByUsername(any());
+            verify(userRepository).existsByEmail(any());
+            // Verificar que NO se llamaron otros métodos después de la validación
+            verify(userRepository, never()).existsByDni(any());
         }
 
+        /**
+         * Caso de error: request null
+         */
         @Test
         @DisplayName("❌ Debería lanzar IllegalArgumentException cuando el request es null")
         void deberiaLanzarIllegalArgumentException_CuandoElRequestEsNull() {
