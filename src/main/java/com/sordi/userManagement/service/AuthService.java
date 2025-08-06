@@ -10,7 +10,6 @@ import com.sordi.userManagement.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -97,21 +96,6 @@ public class AuthService {
         }
     }
 
-    /**
-     * Extraer username de un JWT token
-     * @param token JWT token
-     * @return username contenido en el token
-     */
-    public String getUsernameFromToken(String token) {
-        try {
-            String username = jwtTokenProvider.getUsernameFromToken(token);
-            log.debug("Username extraído del token: {}", username);
-            return username;
-        } catch (Exception e) {
-            log.error("Error al extraer username del token: {}", e.getMessage());
-            throw new BusinessException("Token inválido");
-        }
-    }
 
     /**
      * Verificar si las credenciales son correctas sin generar token
