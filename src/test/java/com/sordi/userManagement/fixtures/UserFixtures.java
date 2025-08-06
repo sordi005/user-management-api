@@ -4,6 +4,7 @@ import com.sordi.userManagement.model.Role;
 import com.sordi.userManagement.model.User;
 import com.sordi.userManagement.model.dto.request.CreateUserRequest;
 import com.sordi.userManagement.model.dto.request.UpdateUserRequest;
+import com.sordi.userManagement.model.dto.response.UserResponse;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -82,4 +83,16 @@ public class UserFixtures {
         // Mantiene el mismo email para simular duplicado
         return request;
     }
+
+    public static UserResponse createUserResponse() {
+        UserResponse response = new UserResponse();
+        response.setId(1L);
+        response.setFirstName("John");
+        response.setLastName("Doe");
+        response.setEmail("john.doe@test.com");
+        response.setUsername("johndoe");
+
+        return response;
+    };
+
 }

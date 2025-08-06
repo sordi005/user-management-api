@@ -1,6 +1,8 @@
 package com.sordi.userManagement.unit.service;
 
 import com.sordi.userManagement.exception.BusinessException;
+import com.sordi.userManagement.exception.ResourceNotFoundException;
+import com.sordi.userManagement.model.Role;
 import com.sordi.userManagement.model.User;
 import com.sordi.userManagement.model.dto.mapper.UserMapper;
 import com.sordi.userManagement.model.dto.request.CreateUserRequest;
@@ -77,7 +79,7 @@ public class UserServiceTest {
     class CreateUserTests {
 
         // 📋 DATOS ESPECÍFICOS para tests de CreateUser
-        private CreateUserRequest validRequest;
+        private CreateUserRequest validUserRequest;
 
         /**
          * 🔧 CONFIGURACIÓN ESPECÍFICA para tests de CreateUser
@@ -85,7 +87,7 @@ public class UserServiceTest {
         @BeforeEach
         void setUpCreateTests() {
             // Crear request de usuario válido
-            validRequest = UserFixtures.createValidCreateUserRequest();
+            validUserRequest = UserFixtures.createValidCreateUserRequest();
         }
 
         /**
@@ -94,28 +96,30 @@ public class UserServiceTest {
         @Test
         @DisplayName("✅ Debería crear usuario exitosamente cuando todos los datos son válidos")
         void deberiaCrearUsuario_CuandoLosDatosSonValidos() {
-            // 🎬 PREPARAR: Configurar mocks para creación exitosa
-            when(userRepository.existsByUsername(validRequest.getUsername())).thenReturn(false);
-            when(userRepository.existsByEmail(validRequest.getEmail())).thenReturn(false);
-            when(userRepository.existsByDni(validRequest.getDni())).thenReturn(false);
-            when(userMapper.toEntity(validRequest)).thenReturn(mockUser);
-            when(passwordEncoder.encode(validRequest.getPassword())).thenReturn("$2a$10$hashedPassword");
+            //  PREPARAR: Configurar mocks para creación exitosa
+            // Simular que el username, email y DNI no existen
+            when(userRepository.existsByUsername(validUserRequest.getUsername())).thenReturn(false);
+            when(userRepository.existsByEmail(validUserRequest.getEmail())).thenReturn(false);
+            when(userRepository.existsByDni(validUserRequest.getDni())).thenReturn(false);
+            // Simular que el usuario ya existe
+            when(userMapper.toEntity(validUserRequest)).thenReturn(mockUser);
+            when(passwordEncoder.encode(validUserRequest.getPassword())).thenReturn("$2a$10$hashedPassword");
             when(userRepository.save(any(User.class))).thenReturn(mockUser);
             when(userMapper.toResponse(mockUser)).thenReturn(mockResponse);
 
-            // ⚡ EJECUTAR: Ejecutar el método bajo prueba
-            UserResponse result = userService.createUser(validRequest);
+            //  EJECUTAR: Ejecutar el método bajo prueba
+            UserResponse response = userService.createUser(validUserRequest);
 
-            // ✅ VERIFICAR: Verificar resultados e interacciones
-            assertNotNull(result, "El resultado no debería ser null");
-            assertEquals(mockResponse.getUsername(), result.getUsername(), "El username debería coincidir");
-            assertEquals(mockResponse.getEmail(), result.getEmail(), "El email debería coincidir");
+            //  VERIFICAR: Verificar resultados e interacciones
+            assertNotNull(response, "El resultado no debería ser null");
+            assertEquals(mockResponse.getUsername(), response.getUsername(), "El username debería coincidir");
+            assertEquals(mockResponse.getEmail(), response.getEmail(), "El email debería coincidir");
 
             // Verificar que todas las interacciones ocurrieron en el orden correcto
-            verify(userRepository).existsByUsername(validRequest.getUsername());
-            verify(userRepository).existsByEmail(validRequest.getEmail());
-            verify(userRepository).existsByDni(validRequest.getDni());
-            verify(passwordEncoder).encode(validRequest.getPassword());
+            verify(userRepository).existsByUsername(validUserRequest.getUsername());
+            verify(userRepository).existsByEmail(validUserRequest.getEmail());
+            verify(userRepository).existsByDni(validUserRequest.getDni());
+            verify(passwordEncoder).encode(validUserRequest.getPassword());
             verify(userRepository).save(any(User.class));
             verify(userMapper).toResponse(mockUser);
         }
@@ -127,14 +131,14 @@ public class UserServiceTest {
         @DisplayName("❌ Debería lanzar BusinessException cuando el email ya existe")
         void deberiaLanzarBusinessException_CuandoElEmailYaExiste() {
             // 🎬 PREPARAR: Simular email existente
-            when(userRepository.existsByUsername(validRequest.getUsername())).thenReturn(false);
-            when(userRepository.existsByEmail(validRequest.getEmail())).thenReturn(true);
+            when(userRepository.existsByUsername(validUserRequest.getUsername())).thenReturn(false);
+            when(userRepository.existsByEmail(validUserRequest.getEmail())).thenReturn(true);
 
             // ⚡ EJECUTAR Y VERIFICAR: Verificar que se lance la excepción
             BusinessException exception = assertThrows(
-                BusinessException.class,
-                () -> userService.createUser(validRequest),
-                "Debería lanzar BusinessException cuando el email existe"
+                    BusinessException.class,
+                    () -> userService.createUser(validUserRequest),
+                    "Debería lanzar BusinessException cuando el email existe"
             );
 
             assertEquals("Email ya esta en uso", exception.getMessage());
@@ -149,13 +153,13 @@ public class UserServiceTest {
         @DisplayName("❌ Debería lanzar BusinessException cuando el username ya existe")
         void deberiaLanzarBusinessException_CuandoElUsernameYaExiste() {
             // 🎬 PREPARAR: Simular username existente
-            when(userRepository.existsByUsername(validRequest.getUsername())).thenReturn(true);
+            when(userRepository.existsByUsername(validUserRequest.getUsername())).thenReturn(true);
 
             // ⚡ EJECUTAR Y VERIFICAR
             BusinessException exception = assertThrows(
-                BusinessException.class,
-                () -> userService.createUser(validRequest),
-                "Debería lanzar BusinessException cuando el username existe"
+                    BusinessException.class,
+                    () -> userService.createUser(validUserRequest),
+                    "Debería lanzar BusinessException cuando el username existe"
             );
 
             assertEquals("Nombre de usuario ya esta en uso", exception.getMessage());
@@ -171,15 +175,15 @@ public class UserServiceTest {
         @DisplayName("❌ Debería lanzar BusinessException cuando el DNI ya existe")
         void deberiaLanzarBusinessException_CuandoElDniYaExiste() {
             // 🎬 PREPARAR: Username y email OK, pero DNI duplicado
-            when(userRepository.existsByUsername(validRequest.getUsername())).thenReturn(false);
-            when(userRepository.existsByEmail(validRequest.getEmail())).thenReturn(false);
-            when(userRepository.existsByDni(validRequest.getDni())).thenReturn(true);
+            when(userRepository.existsByUsername(validUserRequest.getUsername())).thenReturn(false);
+            when(userRepository.existsByEmail(validUserRequest.getEmail())).thenReturn(false);
+            when(userRepository.existsByDni(validUserRequest.getDni())).thenReturn(true);
 
             // ⚡ EJECUTAR Y VERIFICAR
             BusinessException exception = assertThrows(
-                BusinessException.class,
-                () -> userService.createUser(validRequest),
-                "Debería lanzar BusinessException cuando el DNI existe"
+                    BusinessException.class,
+                    () -> userService.createUser(validUserRequest),
+                    "Debería lanzar BusinessException cuando el DNI existe"
             );
 
             assertEquals("DNI existente", exception.getMessage());
@@ -202,9 +206,9 @@ public class UserServiceTest {
 
             // ⚡ EJECUTAR Y VERIFICAR
             BusinessException exception = assertThrows(
-                BusinessException.class,
-                () -> userService.createUser(invalidRoleRequest),
-                "Debería lanzar BusinessException cuando el rol es inválido"
+                    BusinessException.class,
+                    () -> userService.createUser(invalidRoleRequest),
+                    "Debería lanzar BusinessException cuando el rol es inválido"
             );
 
             assertEquals("Rol inválido. Solo se permiten: USER, ADMIN", exception.getMessage());
@@ -219,9 +223,9 @@ public class UserServiceTest {
         void deberiaLanzarIllegalArgumentException_CuandoElRequestEsNull() {
             // ⚡ EJECUTAR Y VERIFICAR: Llamar con parámetro null
             IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.createUser(null),
-                "Debería lanzar IllegalArgumentException cuando el request es null"
+                    IllegalArgumentException.class,
+                    () -> userService.createUser(null),
+                    "Debería lanzar IllegalArgumentException cuando el request es null"
             );
 
             // Verificar que no se llamó ningún método del repository
@@ -305,9 +309,9 @@ public class UserServiceTest {
 
             // ⚡ EJECUTAR Y VERIFICAR: Verificar que se lance la excepción
             com.sordi.userManagement.exception.ResourceNotFoundException exception = assertThrows(
-                com.sordi.userManagement.exception.ResourceNotFoundException.class,
-                () -> userService.updateUser(nonExistentUserId, validUpdateRequest),
-                "Debería lanzar ResourceNotFoundException cuando el usuario no existe"
+                    com.sordi.userManagement.exception.ResourceNotFoundException.class,
+                    () -> userService.updateUser(nonExistentUserId, validUpdateRequest),
+                    "Debería lanzar ResourceNotFoundException cuando el usuario no existe"
             );
 
             assertEquals("Usuario con ID " + nonExistentUserId + " no encontrado", exception.getMessage());
@@ -317,8 +321,9 @@ public class UserServiceTest {
         }
 
         /**
-         * 🚨 Caso de Error: Email duplicado en actualización
+         * Caso de Error: Email duplicado en actualización
          */
+
         @Test
         @DisplayName("❌ Debería lanzar BusinessException cuando el email ya existe en otro usuario")
         void deberiaLanzarBusinessException_CuandoElEmailYaExisteEnOtroUsuario() {
@@ -331,9 +336,9 @@ public class UserServiceTest {
 
             // ⚡ EJECUTAR Y VERIFICAR
             BusinessException exception = assertThrows(
-                BusinessException.class,
-                () -> userService.updateUser(existingUserId, validUpdateRequest),
-                "Debería lanzar BusinessException cuando el email ya existe"
+                    BusinessException.class,
+                    () -> userService.updateUser(existingUserId, validUpdateRequest),
+                    "Debería lanzar BusinessException cuando el email ya existe"
             );
 
             assertEquals("El email ya está en uso por otro usuario", exception.getMessage());
@@ -342,16 +347,16 @@ public class UserServiceTest {
         }
 
         /**
-         * 🚨 Caso Límite: Request nulo
+         * Caso Límite: Request nulo
          */
         @Test
         @DisplayName("❌ Debería lanzar IllegalArgumentException cuando el request es null")
         void deberiaLanzarIllegalArgumentException_CuandoElRequestEsNull() {
             // ⚡ EJECUTAR Y VERIFICAR: Llamar con request null
             IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.updateUser(existingUserId, null),
-                "Debería lanzar IllegalArgumentException cuando el request es null"
+                    IllegalArgumentException.class,
+                    () -> userService.updateUser(existingUserId, null),
+                    "Debería lanzar IllegalArgumentException cuando el request es null"
             );
 
             assertEquals("ID de usuario y datos de actualización son requeridos", exception.getMessage());
@@ -360,16 +365,16 @@ public class UserServiceTest {
         }
 
         /**
-         * 🚨 Caso Límite: ID nulo
+         * Caso Límite: ID nulo
          */
         @Test
         @DisplayName("❌ Debería lanzar IllegalArgumentException cuando el ID es null")
         void deberiaLanzarIllegalArgumentException_CuandoElIdEsNull() {
             // ⚡ EJECUTAR Y VERIFICAR: Llamar con ID null
             IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.updateUser(null, validUpdateRequest),
-                "Debería lanzar IllegalArgumentException cuando el ID es null"
+                    IllegalArgumentException.class,
+                    () -> userService.updateUser(null, validUpdateRequest),
+                    "Debería lanzar IllegalArgumentException cuando el ID es null"
             );
 
             assertEquals("ID de usuario y datos de actualización son requeridos", exception.getMessage());
@@ -378,7 +383,7 @@ public class UserServiceTest {
         }
 
         /**
-         * 🎯 Caso Específico: Actualizar solo email (campos opcionales)
+         * Caso Específico: Actualizar solo email (campos opcionales)
          */
         @Test
         @DisplayName("✅ Debería actualizar solo el email cuando solo se proporciona email")
@@ -412,18 +417,92 @@ public class UserServiceTest {
     @DisplayName("🗑️ Método DeleteUser")
     class DeleteUserTests {
 
+        private Long existingUserId;
+        private User existingUser;
+
+        private User existingUserAdmin;
+
+        /**
+         * CONFIGURACIÓN ESPECÍFICA para tests de DeleteUser
+         */
+        @BeforeEach
+        void setUpDeleteTests() {
+            // Simular que el usuario existe
+            existingUser = UserFixtures.createBasicUser();
+            existingUserId = existingUser.getId();
+        }
+
         @Test
         @DisplayName("✅ Debería eliminar usuario cuando el usuario existe")
         void deberiaEliminarUsuario_CuandoElUsuarioExiste() {
-            // TODO: Implementar cuando agreguemos tests de deleteUser
-            // Este test se agregará cuando implementemos los tests de deleteUser
+            // PREPARAR: Configurar mock para usuario existente
+            when(userRepository.findById(existingUserId)).thenReturn(java.util.Optional.of(existingUser));
+
+            // ⚡ EJECUTAR: Llamar al método de eliminación
+            userService.deleteUser(existingUserId);
+
+            // VERIFICAR: Verificar que se llamaron los métodos correctos
+            verify(userRepository).findById(existingUserId);
+            verify(userRepository).deleteById(existingUserId);
+        }
+
+        @Test
+        @DisplayName("❌ Debería lanzar ResourceNotFoundException cuando el usuario no existe")
+        void deberiaLanzarResourceNotFoundException_CuandoElUsuarioNoExiste() {
+            // PREPARAR: Simular usuario no encontrado
+            Long nonExistentUserId = 999L;
+            when(userRepository.findById(nonExistentUserId)).thenReturn(java.util.Optional.empty());
+
+            // EJECUTAR Y VERIFICAR: Verificar que se lance la excepción
+            com.sordi.userManagement.exception.ResourceNotFoundException exception = assertThrows(
+                    com.sordi.userManagement.exception.ResourceNotFoundException.class,
+                    () -> userService.deleteUser(nonExistentUserId),
+                    "Debería lanzar ResourceNotFoundException cuando el usuario no existe"
+            );
+
+            assertEquals("Usuario con ID " + nonExistentUserId + " no encontrado", exception.getMessage());
+            verify(userRepository).findById(nonExistentUserId);
+            verify(userRepository, never()).deleteById(any());
+        }
+
+        @Test
+        @DisplayName("❌ Debería lanzar IllegalArgumentException cuando el ID es null")
+        void deberiaLanzarIllegalArgumentException_CuandoElIdEsNull() {
+            // EJECUTAR Y VERIFICAR: Llamar con ID null
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> userService.deleteUser(null),
+                    "Debería lanzar IllegalArgumentException cuando el ID es null"
+            );
+
+            assertEquals("ID de usuario es requerido para eliminar", exception.getMessage());
+            verify(userRepository, never()).findById(any());
+            verify(userRepository, never()).deleteById(any());
         }
 
         @Test
         @DisplayName("❌ Debería lanzar excepción al intentar eliminar el último admin")
         void deberiaLanzarExcepcion_AlIntentarEliminarElUltimoAdmin() {
-            // TODO: Test crítico para la lógica de negocio
+
             // Test crítico para la lógica de negocio de protección del último admin
+            existingUserAdmin = UserFixtures.createAdminUser(); // ID 2L
+
+            when(userRepository.findById(existingUserAdmin.getId())).thenReturn(java.util.Optional.of(existingUserAdmin));
+            when(userRepository.countByRole(Role.ADMIN)).thenReturn(1L); // Simular que es el último admin
+
+            // EJECUTAR Y VERIFICAR: Verificar que se lance la excepción
+            BusinessException exception = assertThrows(
+                    BusinessException.class,
+                    () -> userService.deleteUser(existingUserAdmin.getId()),
+                    "Debería lanzar BusinessException al intentar eliminar el último admin"
+            );
+
+            assertEquals("No se puede eliminar el último administrador del sistema", exception.getMessage());
+
+            //Verificaciones de interacciones
+            verify(userRepository).findById(existingUserAdmin.getId());
+            verify(userRepository).countByRole(Role.ADMIN);
+            verify(userRepository, never()).deleteById(any());
         }
     }
 
@@ -434,16 +513,47 @@ public class UserServiceTest {
     @DisplayName("🔍 Métodos GetUser")
     class GetUserTests {
 
+        @BeforeEach
+        void setUpGetTests() {
+            // No necesitas configuración específica aquí
+            // mockUser ya está disponible de la clase padre
+        }
+
         @Test
         @DisplayName("✅ Debería retornar usuario cuando el ID existe")
         void deberiaRetornarUsuario_CuandoElIdExiste() {
-            // TODO: Implementar tests de getUserById
+            // PREPARAR: Configurar mocks
+            when(userRepository.findById(mockUser.getId())).thenReturn(java.util.Optional.of(mockUser));
+            when(userMapper.toResponse(mockUser)).thenReturn(mockResponse);
+
+            // EJECUTAR: Llamar al método
+            UserResponse response = userService.getUserById(mockUser.getId());
+
+            // VERIFICAR: Resultados e interacciones
+            assertEquals(mockResponse, response); // Orden correcto: esperado, actual
+            verify(userRepository).findById(mockUser.getId()); // ✅ CORRECTO
+            verify(userMapper).toResponse(mockUser);
         }
 
         @Test
         @DisplayName("❌ Debería lanzar excepción cuando el usuario no se encuentra")
         void deberiaLanzarExcepcion_CuandoElUsuarioNoSeEncuentra() {
-            // TODO: Implementar tests de ResourceNotFoundException
+
+            //  PREPARAR: Simular usuario no encontrado
+            Long nonExistentId = 999L;
+            when(userRepository.findById(nonExistentId)).thenReturn(java.util.Optional.empty());
+
+            // EJECUTAR Y VERIFICAR: Debe lanzar excepción
+            ResourceNotFoundException exception = assertThrows(
+                    ResourceNotFoundException.class,
+                    () -> userService.getUserById(nonExistentId),
+                    "Debería lanzar ResourceNotFoundException cuando el usuario no existe"
+            );
+
+            assertEquals("Usuario con ID " + nonExistentId + " no encontrado", exception.getMessage());
+            verify(userRepository).findById(nonExistentId);
+            verify(userMapper, never()).toResponse(any(User.class));
         }
     }
 }
+
