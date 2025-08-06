@@ -1,11 +1,14 @@
 package com.sordi.userManagement.unit.service;
 
+import com.sordi.userManagement.config.JwtConfig;
 import com.sordi.userManagement.exception.BusinessException;
 import com.sordi.userManagement.model.User;
+import com.sordi.userManagement.model.dto.mapper.UserMapper;
 import com.sordi.userManagement.model.dto.request.LoginRequest;
 import com.sordi.userManagement.model.dto.request.CreateUserRequest;
 import com.sordi.userManagement.model.dto.response.JwtResponse;
 import com.sordi.userManagement.model.dto.response.UserResponse;
+import com.sordi.userManagement.repository.UserRepository;
 import com.sordi.userManagement.security.JwtTokenProvider;
 import com.sordi.userManagement.service.AuthService;
 import com.sordi.userManagement.service.UserService;
@@ -23,6 +26,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -40,13 +44,22 @@ import static org.mockito.Mockito.*;
 public class AuthServiceTest {
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private UserMapper userMapper;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
     private AuthenticationManager authenticationManager;
 
     @Mock
-    private UserService userService;
+    private JwtTokenProvider jwtTokenProvider;
 
     @Mock
-    private JwtTokenProvider jwtTokenProvider;
+    private JwtConfig jwtConfig;
 
     @InjectMocks
     private AuthService authService;
@@ -91,10 +104,10 @@ public class AuthServiceTest {
             when(jwtTokenProvider.generateToken(username))  // Pasar username, no Authentication
                 .thenReturn(expectedToken);
 
-            // ⚡ EJECUTAR: Intentar login
+            // EJECUTAR: Intentar login
             JwtResponse response = authService.login(validLoginRequest);
 
-            // ✅ VERIFICAR: Login exitoso
+            // VERIFICAR: Login exitoso
             assertNotNull(response, "La respuesta no debería ser null");
             assertEquals(expectedToken, response.getAccessToken(), "El token debería coincidir");
             assertEquals("Bearer", response.getTokenType(), "El tipo debería ser Bearer");
@@ -110,7 +123,7 @@ public class AuthServiceTest {
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Credenciales inválidas"));
 
-            // ⚡ EJECUTAR Y VERIFICAR: Debe fallar la autenticación
+            // EJECUTAR Y VERIFICAR: Debe fallar la autenticación
             BusinessException exception = assertThrows(
                 BusinessException.class,
                 () -> authService.login(validLoginRequest),
@@ -149,49 +162,54 @@ public class AuthServiceTest {
         @DisplayName("✅ Debería registrar usuario exitosamente")
         void deberiaRegistrarUsuario_CuandoLosDatosSonValidos() {
             // 🎬 PREPARAR: Configurar mock de UserService
-            when(userService.createUser(validRegisterRequest)).thenReturn(mockUserResponse);
+            when(authService.register(validRegisterRequest)).thenReturn(mockUserResponse);
 
             // ⚡ EJECUTAR: Registrar usuario
-            UserResponse result = userService.createUser(validRegisterRequest); // Corregido: era .re()
+            UserResponse result = authService.register(validRegisterRequest); // Corregido: era .re()
 
             // ✅ VERIFICAR: Registro exitoso
             assertNotNull(result, "El resultado no debería ser null");
             assertEquals(mockUserResponse.getUsername(), result.getUsername());
             assertEquals(mockUserResponse.getEmail(), result.getEmail());
 
-            verify(userService).createUser(validRegisterRequest);
+            verify(authService).register(validRegisterRequest);
         }
 
         @Test
         @DisplayName("❌ Debería propagar BusinessException del UserService")
         void deberiaPropagar_BusinessExceptionDelUserService() {
             // 🎬 PREPARAR: UserService lanza excepción (ej: email duplicado)
-            when(userService.createUser(validRegisterRequest))
+            when(authService.register(validRegisterRequest))
                 .thenThrow(new BusinessException("Email ya esta en uso"));
 
             // ⚡ EJECUTAR Y VERIFICAR: Debe propagar la excepción
             BusinessException exception = assertThrows(
                 BusinessException.class,
-                () -> userService.createUser(validRegisterRequest), // Corregido: era userService.createUser()
+                () -> authService.register(validRegisterRequest), // Corregido: era userService.createUser()
                 "Debería propagar BusinessException del UserService"
             );
 
             assertEquals("Email ya esta en uso", exception.getMessage());
-            verify(userService).createUser(validRegisterRequest);
+            verify(authService).register(validRegisterRequest);
         }
 
         @Test
         @DisplayName("❌ Debería lanzar IllegalArgumentException cuando el request es null")
         void deberiaLanzarIllegalArgumentException_CuandoElRequestEsNull() {
-            // ⚡ EJECUTAR Y VERIFICAR: Register con request null
+            //  EJECUTAR Y VERIFICAR: Register con request null
             IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> userService.createUser(null), // Corregido: era userService.createUser()
+                () -> authService.register(null),
                 "Debería lanzar IllegalArgumentException cuando el request es null"
             );
 
             assertEquals("Datos de registro son requeridos", exception.getMessage());
-            verify(userService, never()).createUser(any());
+            verify(userRepository, never()).existsByEmail(any());
+            verify(userRepository, never()).existsByUsername(any());
+            verify(userRepository, never()).existsByDni(any());
+            verify(userMapper, never()).toEntity(any());
+            verify(passwordEncoder, never()).encode(any());
+            verify(userRepository, never()).save(any());
         }
     }
 }
