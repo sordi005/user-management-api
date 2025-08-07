@@ -176,13 +176,17 @@ SHOW_SQL=true
 #### Opción 1: Inicio Rápido
 ```bash
 # 1. Clonar repositorio
-git clone [URL_DEL_REPO]
+git clone https://github.com/sordi005/user-management-api.git
 cd user-management-api
 
-# 2. Levantar PostgreSQL automáticamente
+# 2. Copiar variables de entorno
+cp .env.example .env
+# Editar .env con tus valores
+
+# 3. Levantar PostgreSQL automáticamente
 docker-compose up -d postgres
 
-# 3. Ejecutar aplicación
+# 4. Ejecutar aplicación
 ./mvnw spring-boot:run
 ```
 

@@ -32,29 +32,18 @@ build/
 ### VS Code ###
 .vscode/
 
-# Environment Variables (NO subir al repo)
+### Environment Variables ###
 .env
 .env.local
 .env.production
 
-# Database
-*.db
-*.sqlite
+### Logs ###
+*.log
+logs/
 
-# IDE específico
-.idea/
-
-# OS específico
+### OS ###
 .DS_Store
 Thumbs.db
 
-# Logs
-logs/
-*.log
-
-### Archivos temporales ###
-*.tmp
-*.temp
-
 ### Docker ###
-.docker/
+docker-compose.override.yml
