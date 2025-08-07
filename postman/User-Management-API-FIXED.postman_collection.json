@@ -1,0 +1,497 @@
+{
+  "info": {
+    "name": "User Management API - Updated Collection",
+    "description": "Colección actualizada con credenciales correctas del DevDataInitializer",
+    "_postman_id": "user-management-api-updated",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "1. Login as Admin (DevDataInitializer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('✅ Login de admin exitoso', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "    ",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('admin_token', response.data.access_token);",
+                  "    console.log('🔑 Token de admin guardado:', response.data.access_token.substring(0, 20) + '...');",
+                  "    ",
+                  "    pm.test('Token is present', function () {",
+                  "        pm.expect(response.data.access_token).to.be.a('string');",
+                  "    });",
+                  "} else {",
+                  "    pm.test('❌ Error en login de admin', function () {",
+                  "        console.log('Error:', pm.response.text());",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "2. Login as User (DevDataInitializer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('✅ Login de usuario exitoso', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "    ",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('user_token', response.data.access_token);",
+                  "    console.log('👤 Token de usuario guardado:', response.data.access_token.substring(0, 20) + '...');",
+                  "} else {",
+                  "    pm.test('❌ Error en login de usuario', function () {",
+                  "        console.log('Error:', pm.response.text());",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"user\",\n  \"password\": \"User123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "3. Register New User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    pm.test('✅ Usuario registrado exitosamente', function () {",
+                  "        pm.response.to.have.status(201);",
+                  "    });",
+                  "    ",
+                  "    const response = pm.response.json();",
+                  "    console.log('📝 Usuario creado:', response.data);",
+                  "} else {",
+                  "    pm.test('❌ Error en registro', function () {",
+                  "        console.log('Error:', pm.response.text());",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👨‍💼 Admin Operations",
+      "item": [
+        {
+          "name": "Get All Users (Paginated)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Lista de usuarios obtenida', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "console.log(`📊 Total de usuarios: ${response.totalElements}`);",
+                  "console.log(`📄 Página actual: ${response.number + 1} de ${response.totalPages}`);",
+                  "console.log(`📋 Usuarios en esta página: ${response.numberOfElements}`);",
+                  "console.log('👥 Usuarios:', response.content.map(u => `${u.username} (${u.role})`).join(', '));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users?page=0&size=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Número de página (comenzando en 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Cantidad de usuarios por página"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Usuario obtenido exitosamente', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "console.log('👤 Usuario obtenido:', response.username);",
+                  "console.log('📧 Email:', response.email);",
+                  "console.log('🔑 Rol:', response.role);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create User (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('✅ Usuario creado exitosamente', function () {",
+                  "        pm.response.to.have.status(201);",
+                  "    });",
+                  "    ",
+                  "    const response = pm.response.json();",
+                  "    console.log('🎉 Usuario creado:', response.data.username);",
+                  "    console.log('🆔 ID asignado:', response.data.id);",
+                  "    ",
+                  "    // Guardar el ID del usuario creado para otros tests",
+                  "    pm.collectionVariables.set('created_user_id', response.data.id);",
+                  "} else {",
+                  "    pm.test('❌ Error al crear usuario', function () {",
+                  "        console.log('Error:', pm.response.text());",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"role\": \"USER\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", "create"]
+            }
+          }
+        },
+        {
+          "name": "Update User (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Usuario actualizado exitosamente', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "console.log('🔄 Usuario actualizado:', response.username);",
+                  "console.log('📧 Nuevo email:', response.email);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated by Admin\",\n  \"lastName\": \"User Modified\",\n  \"email\": \"updated@admin.com\",\n  \"role\": \"USER\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/{{created_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", "{{created_user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Usuario eliminado exitosamente', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "console.log('🗑️ Usuario eliminado exitosamente');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/{{created_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", "{{created_user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Users - Page 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Segunda página obtenida', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "console.log(`📄 Página ${response.number + 1} de ${response.totalPages}`);",
+                  "console.log(`📊 Total usuarios en sistema: ${response.totalElements}`);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users?page=1&size=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Segunda página"
+                },
+                {
+                  "key": "size",
+                  "value": "5",
+                  "description": "5 usuarios por página"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 User Operations (Regular User)",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Perfil obtenido exitosamente', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "console.log('👤 Mi usuario:', response.username);",
+                  "console.log('📧 Mi email:', response.email);",
+                  "console.log('👨‍💼 Mi nombre:', response.firstName + ' ' + response.lastName);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Perfil actualizado exitosamente', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "console.log('🔄 Perfil actualizado para:', response.username);",
+                  "console.log('📧 Nuevo email:', response.email);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated User\",\n  \"lastName\": \"Self Modified\",\n  \"email\": \"user-updated@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
