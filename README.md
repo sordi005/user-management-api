@@ -1,233 +1,414 @@
 # 👤 User Management API
 
-## 📝 Descripción
-API REST para gestión de usuarios desarrollada con Spring Boot 3. Incluye autenticación JWT, operaciones CRUD completas y arquitectura profesional con manejo de excepciones.
+## 📋 Descripción
 
-## 🚀 Tecnologías Utilizadas
-- **Java 21** - Lenguaje de programación
+API REST completa desarrollada con **Spring Boot 3** para la gestión de usuarios con autenticación JWT, control de acceso basado en roles y arquitectura empresarial. Sistema completo con base de datos PostgreSQL, migraciones automáticas, testing unitario y documentación API integrada.
+
+## ✨ Funcionalidades Implementadas
+
+### 🔐 Sistema de Autenticación Completo
+- ✅ **Registro de usuarios** con validaciones robustas (email, DNI, contraseñas seguras)
+- ✅ **Login JWT** con access tokens y refresh tokens
+- ✅ **Control de roles** (USER/ADMIN) con autorización granular
+- ✅ **Encriptación BCrypt** para contraseñas
+- ✅ **Validación de tokens** en endpoints protegidos
+
+### 👥 Gestión Completa de Usuarios (CRUD)
+- ✅ **Crear usuarios** (endpoint admin)
+- ✅ **Listar usuarios** con paginación (page/size)
+- ✅ **Obtener usuario por ID**
+- ✅ **Actualizar usuarios** 
+- ✅ **Eliminar usuarios**
+- ✅ **Búsqueda** por username, email, DNI únicos
+
+### 🗄️ Base de Datos 
+- ✅ **PostgreSQL 15** con Docker Compose
+- ✅ **Migraciones Flyway** automáticas (V1: tabla users, V2: roles)
+- ✅ **Índices optimizados** para performance
+- ✅ **Constraints únicos** (username, email, DNI)
+- ✅ **Datos de prueba** automáticos en desarrollo
+
+### 🛡️ Seguridad 
+- ✅ **Spring Security 6** con configuración completa
+- ✅ **JWT Provider** personalizado con validación
+- ✅ **CORS configurado** para frontend
+- ✅ **Exception handling** centralizado
+- ✅ **Validaciones Bean Validation** en todos los DTOs
+
+### 🧪 Testing 
+- ✅ **Tests unitarios** con JUnit 5 + Mockito
+- ✅ **Tests organizados** por servicios (AuthService, UserService)
+- ✅ **Test fixtures** reutilizables
+- ✅ **Cobertura** de casos edge y validaciones
+
+### 📚 Documentación Automática
+- ✅ **Swagger UI** integrado (`/swagger-ui.html`)
+- ✅ **OpenAPI 3** completo (`/v3/api-docs`)
+- ✅ **Postman Collection** funcional con variables
+- ✅ **Tests automáticos** en Postman
+
+### 🛠️ DevOps y Automatización
+- ✅ **Docker Compose** para PostgreSQL
+- ✅ **Variables de entorno** (.env configurado)
+- ✅ **Scripts automatización** (reset-db.bat, validate-env.bat)
+- ✅ **Perfiles Spring** (dev/prod/test) bien separados
+- ✅ **Maven profiles** con optimizaciones
+
+## 🚀 Stack Tecnológico Completo
+
+### Backend Core
+- **Java 21** - LTS version
 - **Spring Boot 3.5.4** - Framework principal
-- **Spring Security** - Autenticación y autorización
-- **JWT** - Tokens de autenticación
-- **Spring Data JPA** - Persistencia de datos
-- **PostgreSQL** - Base de datos principal
-- **H2** - Base de datos para testing
-- **Flyway** - Migraciones de base de datos
-- **Maven** - Gestión de dependencias
-- **Swagger/OpenAPI** - Documentación de API
-- **Lombok** - Reducción de código boilerplate
-- **MapStruct** - Mapeo de objetos
+- **Spring Security 6** - Autenticación y autorización
+- **Spring Data JPA** - ORM y repositorios
+- **Spring Validation** - Validaciones automáticas
 
-## 📋 Características
-- ✅ **CRUD completo de usuarios**
-- ✅ **Autenticación JWT con refresh tokens**
-- ✅ **Validaciones de datos robustas**
-- ✅ **Manejo global de excepciones**
-- ✅ **Documentación automática con Swagger**
-- ✅ **Configuración por ambientes (dev/test/prod)**
-- ✅ **Migraciones de base de datos con Flyway**
-- ✅ **Testing unitario e integración**
+### Base de Datos
+- **PostgreSQL 15** - Base de datos principal
+- **Flyway** - Migraciones versionadas
+- **HikariCP** - Pool de conexiones optimizado
+- **H2** - Base de datos en memoria para tests
 
-## 🏗️ Arquitectura
+### Seguridad y JWT
+- **JJWT 0.12.6** - Generación y validación JWT
+- **BCrypt** - Encriptación de contraseñas
+- **Spring Security JWT** - Filtros y providers personalizados
+
+### Documentación y Testing
+- **SpringDoc OpenAPI 2.7.0** - Swagger UI automático
+- **JUnit 5** - Framework de testing
+- **Mockito** - Mocking para tests unitarios
+- **Spring Boot Test** - Integration testing
+
+### Desarrollo y Productividad
+- **Lombok** - Reducción de boilerplate
+- **MapStruct 1.5.5** - Mappers automáticos DTO ↔ Entity
+- **Spring Boot DevTools** - Hot reload
+- **Spring Boot Actuator** - Monitoreo y métricas
+
+## 🏗️ Arquitectura del Proyecto
+
 ```
 src/main/java/com/sordi/userManagement/
-├── config/           # Configuraciones de seguridad y JWT
-├── controller/       # Controladores REST
-├── exception/        # Manejo global de excepciones
-├── model/           # Entidades y DTOs
-├── repository/      # Repositorios JPA
-├── security/        # Filtros y proveedores JWT
-├── service/         # Lógica de negocio
-└── util/           # Utilidades
+├── UserManagementApiApplication.java     # Clase principal
+├── config/
+│   ├── DevDataInitializer.java          # Datos de prueba automáticos
+│   ├── JwtConfig.java                    # Configuración JWT
+│   └── SecurityConfig.java               # Configuración Spring Security
+├── controller/
+│   ├── AuthController.java              # Endpoints autenticación (/api/auth)
+│   ├── AdminController.java             # CRUD usuarios (/api/admin/users)
+│   └── UserController.java              # Endpoints perfil usuario
+├── service/
+│   ├── AuthService.java                 # Lógica autenticación y registro
+│   └── UserService.java                 # Lógica CRUD usuarios
+├── repository/
+│   └── UserRepository.java              # Acceso datos JPA
+├── model/
+│   ├── User.java                        # Entidad principal
+│   ├── Role.java                        # Enum roles (USER/ADMIN)
+│   └── dto/                            # DTOs request/response
+│       ├── request/                     # CreateUser, Login, Update...
+│       ├── response/                    # UserResponse, JwtResponse...
+│       └── mapper/                      # MapStruct mappers
+├── security/
+│   ├── JwtTokenProvider.java           # Generación/validación JWT
+│   ├── JwtAuthenticationFilter.java    # Filtro validación tokens
+│   └── CustomUserDetailsService.java   # UserDetails personalizado
+├── exception/
+│   ├── GlobalExceptionHandler.java     # Manejo centralizado errores
+│   ├── BusinessException.java          # Excepciones de negocio
+│   └── ResourceNotFoundException.java   # Recursos no encontrados
+└── util/
+    └── [Utilidades varias]
+
+src/main/resources/
+├── application.yml                      # Configuración base
+├── application-dev.yml                 # Desarrollo (PostgreSQL)
+├── application-prod.yml                # Producción (optimizado)
+├── application-test.yml                # Testing (H2 memoria)
+└── db/migration/
+    ├── V1__Create_users_table.sql      # Tabla usuarios + índices
+    └── V2__add_roles.sql               # Columna roles
+
+scripts/
+├── reset-db.bat                        # Reset completo BD Docker
+└── validate-env.bat                    # Validación entorno
+
+postman/
+├── User-Management-API-FIXED.postman_collection.json  # Colección completa
+└── README-POSTMAN.md                   # Documentación Postman
 ```
 
-## 🔗 Endpoints Principales
+## 🛠️ Configuración y Ejecución
 
-### Autenticación
-```http
-POST /api/auth/register    # Registrar usuario
-POST /api/auth/login       # Iniciar sesión
-POST /api/auth/refresh     # Renovar token
+### Prerrequisitos
+- **Java 21+** (Verificar: `java -version`)
+- **Docker & Docker Compose** (Base de datos automática)
+- **Maven 3.6+** (Gestión dependencias)
+
+### Variables de Entorno (.env configurado)
+El proyecto incluye archivo `.env` con todas las variables necesarias:
+
+```env
+# Base de Datos
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=user_management
+DB_USERNAME=user
+DB_PASSWORD=1234
+
+# Aplicación
+SERVER_PORT=8086
+SPRING_PROFILES_ACTIVE=dev
+
+# JWT
+JWT_SECRET=mi_super_secreto_jwt_key_debe_tener_minimo_32_caracteres_para_ser_seguro
+JWT_EXPIRATION_MS=86400000
+
+# Logging
+LOG_LEVEL_APP=DEBUG
+SHOW_SQL=true
 ```
 
-### Gestión de Usuarios
-```http
-GET    /api/users          # Listar usuarios (paginado)
-GET    /api/users/{id}     # Obtener usuario por ID
-PUT    /api/users/{id}     # Actualizar usuario
-DELETE /api/users/{id}     # Eliminar usuario
-```
+### 🚀 Ejecutar el Proyecto
 
-## 🚀 Instalación y Uso
-
-### Prerequisitos
-- Java 21
-- Maven 3.6+
-- PostgreSQL 12+ (para producción)
-
-### Configuración Local
-1. **Clonar el repositorio**
+#### Opción 1: Inicio Rápido
 ```bash
-git clone https://github.com/tu-usuario/user-management-api.git
+# 1. Clonar repositorio
+git clone [URL_DEL_REPO]
 cd user-management-api
-```
 
-2. **Configurar base de datos**
-```bash
-# Crear base de datos PostgreSQL
-createdb user_management
+# 2. Levantar PostgreSQL automáticamente
+docker-compose up -d postgres
 
-# O usar Docker
-docker run --name postgres-dev -e POSTGRES_DB=user_management -e POSTGRES_USER=user -e POSTGRES_PASSWORD=1234 -p 5432:5432 -d postgres:15
-```
-
-3. **Configurar variables de entorno** (opcional)
-```bash
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_NAME=user_management
-export DB_USERNAME=user
-export DB_PASSWORD=1234
-export JWT_SECRET=mySecretKeyForJWTTokenGeneration123456789
-```
-
-4. **Ejecutar la aplicación**
-```bash
+# 3. Ejecutar aplicación
 ./mvnw spring-boot:run
 ```
 
-La aplicación estará disponible en: `http://localhost:8086`
-
-### Docker (Recomendado)
+#### Opción 2: Reset Completo (si hay problemas)
 ```bash
-# Levantar todo el stack
-docker-compose up -d
+# En Windows - Reset automático BD
+scripts\reset-db.bat
 
-# Solo la aplicación
-docker build -t user-management-api .
-docker run -p 8086:8086 user-management-api
+# Luego ejecutar aplicación
+./mvnw spring-boot:run
 ```
 
-## 📖 Documentación API
-Una vez iniciada la aplicación, la documentación interactiva estará disponible en:
-- **Swagger UI**: http://localhost:8086/swagger-ui.html
-- **OpenAPI JSON**: http://localhost:8086/v3/api-docs
-
-## 🧪 Testing
-
-### Usuarios de Prueba Pre-configurados
-El sistema incluye usuarios de prueba que se crean automáticamente:
-
-| Usuario | Contraseña | Rol | Descripción |
-|---------|------------|-----|-------------|
-| `admin` | `Admin123!` | ADMIN | Usuario administrador |
-| `juan` | `User123!` | USER | Usuario regular |
-| `maria` | `User123!` | USER | Usuario regular |
-
-### Testing con Postman (Recomendado)
-1. **Importar colección**: Importa el archivo `postman/User_Management_API.postman_collection.json`
-2. **Login automático**: Usa los requests "Login Admin" o "Login User Juan"
-   - ✅ **El token se guarda automáticamente** - no necesitas copiarlo manualmente
-3. **Testear endpoints**: Todos los demás requests usarán el token automáticamente
-
-### Testing Manual
+#### Opción 3: Con Maven tradicional
 ```bash
-# 1. Login como admin
-curl -X POST http://localhost:8086/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"Admin123!"}'
-
-# 2. Usar el token en requests (reemplaza TOKEN_AQUI)
-curl -X GET http://localhost:8086/api/users/me \
-  -H "Authorization: Bearer TOKEN_AQUI"
+mvn clean install
+mvn spring-boot:run
 ```
 
-### Ejecutar Tests Unitarios
+🎉 **Aplicación lista en:** `http://localhost:8086`
+
+## 🔑 Credenciales de Prueba Automáticas
+
+El sistema crea automáticamente usuarios de prueba en desarrollo:
+
+### Usuario Administrador
+- **Username:** `admin`
+- **Password:** `Admin123!`
+- **Rol:** `ADMIN`
+- **Acceso:** Todos los endpoints
+
+### Usuario Regular
+- **Username:** `user` 
+- **Password:** `User123!`
+- **Rol:** `USER`
+- **Acceso:** Solo endpoints públicos
+
+## 🚀 Cómo Usar la API
+
+### 1️⃣ Registro de Nuevo Usuario
 ```bash
-# Ejecutar todos los tests
-./mvnw test
-
-# Test con cobertura
-./mvnw test jacoco:report
-```
-## 📊 Monitoreo
-- **Health Check**: http://localhost:8086/actuator/health
-- **Métricas**: http://localhost:8086/actuator/metrics
-- **Info**: http://localhost:8086/actuator/info
-
-## 💡 Ejemplos de Uso
-
-### Registrar Usuario
-```json
-POST /api/auth/register
+POST http://localhost:8086/api/auth/register
 Content-Type: application/json
 
 {
   "firstName": "Juan",
   "lastName": "Pérez",
-  "dateOfBirth": "1990-03-15",
-  "dni": "12345678",
-  "email": "juan.perez@gmail.com",
-  "username": "juanperez90",
-  "password": "JuanP123!"
+  "dateOfBirth": "1990-05-15",
+  "email": "juan@example.com", 
+  "dni": "87654321",
+  "username": "juanperez",
+  "password": "Password123!"
 }
 ```
 
-### Iniciar Sesión
+**Respuesta:**
 ```json
-POST /api/auth/login
+{
+  "success": true,
+  "message": "Usuario registrado exitosamente",
+  "data": {
+    "id": 3,
+    "username": "juanperez",
+    "email": "juan@example.com",
+    "firstName": "Juan",
+    "lastName": "Pérez",
+    "role": "USER"
+  },
+  "status_code": 201
+}
+```
+
+### 2️⃣ Login y Obtener JWT
+```bash
+POST http://localhost:8086/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "juanperez90",
-  "password": "JuanP123!"
+  "username": "admin",
+  "password": "Admin123!"
 }
 ```
 
-### Respuesta con JWT
+**Respuesta:**
 ```json
 {
   "success": true,
   "message": "Login exitoso",
   "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "tokenType": "Bearer",
-    "expiresIn": 86400
-  },
-  "timestamp": "2024-01-15T10:30:00",
-  "status": 200
+    "token": "eyJhbGciOiJIUzI1NiJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
+    "user": {
+      "username": "admin",
+      "role": "ADMIN"
+    }
+  }
 }
 ```
 
-## 🔧 Configuración de Desarrollo
+### 3️⃣ Listar Usuarios (Solo ADMIN)
+```bash
+GET http://localhost:8086/api/admin/users?page=0&size=10
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+```
 
-### Perfiles Disponibles
-- **dev**: Desarrollo local con PostgreSQL
-- **test**: Testing con H2 en memoria  
-- **prod**: Producción con configuraciones optimizadas
+### 4️⃣ Crear Usuario (Solo ADMIN)
+```bash
+POST http://localhost:8086/api/admin/users/create
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+Content-Type: application/json
 
-### Variables de Entorno
-| Variable | Descripción | Valor por Defecto |
-|----------|-------------|-------------------|
-| `SPRING_PROFILES_ACTIVE` | Perfil activo | `dev` |
-| `DB_HOST` | Host de la base de datos | `localhost` |
-| `DB_PORT` | Puerto de la base de datos | `5432` |
-| `DB_NAME` | Nombre de la base de datos | `user_management` |
-| `JWT_SECRET` | Clave secreta para JWT | *(debe configurarse)* |
-| `SERVER_PORT` | Puerto del servidor | `8086` |
+{
+  "firstName": "Ana",
+  "lastName": "García",
+  "dateOfBirth": "1985-12-10",
+  "email": "ana@company.com",
+  "dni": "11223344",
+  "username": "anagarcia",
+  "password": "Secure123!",
+  "role": "USER"
+}
+```
 
-## 🤝 Contribución
-1. Fork el proyecto
-2. Crea tu feature branch (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit tus cambios (`git commit -m 'Agregar nueva funcionalidad'`)
-4. Push al branch (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
+## 📖 Documentación Interactiva
 
-## 📄 Licencia
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
+### Swagger UI (Recomendado)
+- **URL:** `http://localhost:8086/swagger-ui.html`
+- **Características:**
+  - ✅ Interfaz visual para probar endpoints
+  - ✅ Documentación automática generada
+  - ✅ Ejemplos de request/response
+  - ✅ Validaciones en tiempo real
 
-## 👨‍💻 Autor
-**Santiago Sordi** - [GitHub](https://github.com/tu-usuario) - [LinkedIn](https://linkedin.com/in/tu-perfil)
+### OpenAPI Specification
+- **URL:** `http://localhost:8086/v3/api-docs`
+- **Formato:** JSON estándar OpenAPI 3
+
+### Postman Collection
+- **Archivo:** `postman/User-Management-API-FIXED.postman_collection.json`
+- **Incluye:** 
+  - ✅ Todos los endpoints configurados
+  - ✅ Variables de entorno automáticas
+  - ✅ Tests de validación automáticos
+  - ✅ Flujos completos de uso
+
+## 📡 Endpoints Completos
+
+### 🔐 Autenticación (`/api/auth`)
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/register` | Registrar nuevo usuario | ❌ |
+| `POST` | `/login` | Iniciar sesión | ❌ |
+| `POST` | `/refresh` | Renovar access token | ❌ |
+
+### 👨‍💼 Administración (`/api/admin/users`)
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/` | Listar usuarios (paginado) | 🔒 ADMIN |
+| `GET` | `/{id}` | Obtener usuario por ID | 🔒 ADMIN |
+| `POST` | `/create` | Crear nuevo usuario | 🔒 ADMIN |
+| `PUT` | `/{id}` | Actualizar usuario | 🔒 ADMIN |
+| `DELETE` | `/{id}` | Eliminar usuario | 🔒 ADMIN |
+
+### 📊 Monitoreo (`/actuator`)
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/health` | Estado de la aplicación | ❌ |
+| `GET` | `/info` | Información del proyecto | ❌ |
+| `GET` | `/metrics` | Métricas de rendimiento | ❌ |
+
+## 🧪 Testing
+
+### Ejecutar Tests
+```bash
+# Tests unitarios completos
+./mvnw test
+
+# Tests con verbose output
+./mvnw test -Dtest=AuthServiceTest
+
+# Tests con coverage
+./mvnw clean test jacoco:report
+```
+
+### Cobertura de Testing
+- ✅ **AuthService** - Login, registro, validaciones
+- ✅ **UserService** - CRUD completo, paginación  
+- ✅ **Controllers** - Endpoints y validaciones
+- ✅ **Security** - JWT tokens, autorización
+- ✅ **Repository** - Queries y constraints
+
+## 🚀 Próximas Funcionalidades en Desarrollo
+
+### 🐳 Milestone 1: Containerización Completa
+- [ ] **Dockerfile multi-stage** optimizado para producción
+- [ ] **Docker Compose completo** (app + PostgreSQL + Redis)
+- [ ] **Variables de entorno** para diferentes ambientes
+- [ ] **Health checks** y monitoring containers
+
+### 🌐 Milestone 2: Deploy en Producción
+- [ ] **Deploy en Railway/Render** con PostgreSQL cloud
+- [ ] **CI/CD con GitHub Actions** automatizado
+- [ ] **URL pública** funcionando 24/7
+- [ ] **SSL/HTTPS** configurado
+
+### 📊 Milestone 3: Funcionalidades Avanzadas
+- [ ] **Paginación avanzada** con filtros y ordenamiento
+- [ ] **Cache con Redis** para optimización
+- [ ] **Rate limiting** para protección API
+- [ ] **Logs estructurados** con ELK Stack
+
+### 🧪 Milestone 4: Testing Empresarial
+- [ ] **Integration tests** con TestContainers
+- [ ] **Coverage reports** automatizados (+90%)
+- [ ] **Performance testing** con JMeter
+- [ ] **Security testing** automatizado
 
 ---
-⭐ ¡Si te gustó este proyecto, dale una estrella en GitHub!
+
+**👨‍💻 Desarrollado por:** Santiago Sordi  
+**📊 Estado:** Funcional completo - Listo para deploy  
+**🎯 Objetivo:** Portfolio 
+**📅 Última actualización:** Agosto 2025
+
+## 🔧 Scripts de Utilidad
+
+- `scripts/reset-db.bat` - Reset completo de base de datos
+- `scripts/validate-env.bat` - Validación de entorno
+- `docker-compose up -d postgres` - Levantar solo PostgreSQL
+- `./mvnw spring-boot:run` - Ejecutar aplicación
