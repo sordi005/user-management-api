@@ -1,7 +1,9 @@
 spring:
   datasource:
-    # Railway provee DATABASE_URL en formato postgresql://user:pass@host:port/db
-    url: ${DATABASE_URL}
+    # Configuración que funciona tanto para desarrollo local como Railway
+    # Local: jdbc:postgresql://localhost:5432/user_management?sslmode=disable&ApplicationName=user-management-api
+    # Railway: postgresql://postgres:password@host:port/database (se agrega jdbc: automáticamente)
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/user_management?sslmode=disable&ApplicationName=user-management-api}
     driver-class-name: org.postgresql.Driver
     hikari:
       # Para app pequeña - máximo 10 usuarios
