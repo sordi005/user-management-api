@@ -1,23 +1,27 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSL_MODE}&ApplicationName=${DB_APP_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    # Railway provee DATABASE_URL en formato postgresql://user:pass@host:port/db
+    url: ${DATABASE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:user_management}?sslmode=${DB_SSL_MODE:require}&ApplicationName=${DB_APP_NAME:user-management-api}}
+    # Estas se extraen automáticamente del DATABASE_URL en Railway
+    username: ${DB_USERNAME:user}
+    password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 5
-      minimum-idle: 2
-      connection-timeout: 2000
-      idle-timeout: 300000
-      max-lifetime: 900000
+      # Para app pequeña - máximo 10 usuarios
+      maximum-pool-size: 3
+      minimum-idle: 1
+      connection-timeout: 10000
+      idle-timeout: 180000
+      max-lifetime: 600000
 
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: false
+    show-sql: ${SHOW_SQL:false}
     open-in-view: false
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           batch_size: 5
         format_sql: false
@@ -30,62 +34,28 @@ spring:
     sql-migration-suffixes: .sql
     encoding: UTF-8
     validate-on-migrate: true
+    baseline-on-migrate: true
 
 jwt:
-  secret: A8k9L3mN7pQ2sT6vY1wZ5xC4bF8dG9hJ2kL7nM4
-  expiration: 3600000
-  refresh-expiration: 86400000
-  issuer: user-management-api
-  audience: user-management-api-audience
+  secret: ${JWT_SECRET:A8k9L3mN7pQ2sT6vY1wZ5xC4bF8dG9hJ2kL7nM4}
+  expiration: ${JWT_EXPIRATION:3600000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400000}
+  issuer: ${JWT_ISSUER:user-management-api}
+  audience: ${JWT_AUDIENCE:user-management-api-audience}
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${PORT:8080}
   error:
     include-message: never
     include-binding-errors: never
     include-stacktrace: never
     include-exception: false
-  compression:
-    enabled: true
-    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
-    min-response-size: 1024
-  tomcat:
-    connection-timeout: 20000
-    max-connections: 200
-    threads:
-      max: 50
-      min-spare: 10
-  servlet:
-    context-path: /api
 
 logging:
   level:
-    root: INFO
-    com.sordi.userManagement: INFO  # Corregido: userManagement (con M mayúscula)
-    org.springframework.boot: INFO  # Agregado para logs de arranque
-    org.springframework.security: WARN
-    org.flywaydb: INFO  # Agregado para logs de migraciones
-    com.zaxxer.hikari: INFO  # Agregado para logs del pool de conexiones
-    org.hibernate.SQL: OFF
+    com.sordi.userManagement: ${LOG_LEVEL_APP:INFO}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    org.hibernate.SQL: ${SHOW_SQL:false}
     org.hibernate.type: OFF
   pattern:
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-    console: "%d{HH:mm:ss} %-5level %logger{36} - %msg%n"
-  file:
-    name: logs/user-management-api.log
-    max-size: 10MB
-    max-history: 7
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-      base-path: /actuator
-  endpoint:
-    health:
-      group:
-        readiness:
-          include: db
-        liveness:
-          include: ping
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
