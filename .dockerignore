@@ -1,0 +1,38 @@
+# Archivos de desarrollo
+.env
+.env.*
+*.log
+logs/
+
+# Directorios de build
+target/
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Git
+.git/
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests
+src/test/
+
+# Documentation
+docs/
+README.md
+HELP.md
+
+# Docker
+Dockerfile
+docker-compose*.yml
+docker-commands.md
+
+# Scripts
+scripts/

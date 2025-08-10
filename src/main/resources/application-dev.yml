@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:user_management}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:UserManagementAPI}
     username: ${DB_USERNAME:user}
     password: ${DB_PASSWORD:1234}
     driver-class-name: org.postgresql.Driver
@@ -31,8 +31,21 @@ server:
 
 logging:
   level:
-    com.sordi.usermanagement: ${LOG_LEVEL_APP:DEBUG}
-    org.springframework.security: ${LOG_LEVEL_SECURITY:DEBUG}
+    com.sordi.usermanagement: ${LOG_LEVEL_APP:INFO}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    org.hibernate.sql = ${SHOW_SQL:DEBUG}
+    org.hibernate.type = OFF
+    org.springframework.web: WARN
+    org.springframework.boot : WARN
+    org.postgresql : WARN
+
+  file:
+    name: logs/user-management-api.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      total-size-cap: 300MB
 
 management:
   endpoints:

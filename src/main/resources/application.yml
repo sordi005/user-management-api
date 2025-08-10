@@ -1,8 +1,6 @@
 spring:
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
+    active: ${SPRING_PROFILES_ACTIVE:prod}
   application:
     name: user-management-api
 
-server:
-  port: ${SERVER_PORT:8086}
