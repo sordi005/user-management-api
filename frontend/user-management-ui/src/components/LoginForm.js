@@ -60,19 +60,22 @@ const LoginForm = () => {
       // Llamar a la API (esto usa tu AuthController)
       const response = await loginUser(formData);
 
-      // Si el login es exitoso, tu API devuelve:
-      // { success: true, data: { access_token: "...", ... } }
-      if (response.data.success) {
+      // Si el login es exitoso, loginUser() devuelve:
+      // { success: true, user: { access_token: "...", ... }, message: "..." }
+      if (response.success) {
         setMessage('¡Login exitoso! Redirigiendo...');
 
         // El token se guarda automáticamente en api.js
         // TODO: Aquí redirigirías al dashboard
-        console.log('Usuario logueado:', response.data);
+        console.log('Usuario logueado:', response.user);
+      } else {
+        // Mostrar error devuelto por la API
+        setError(response.error || 'Error en el login');
       }
 
     } catch (error) {
       // Manejar errores del backend (401, 400, etc.)
-      const errorMessage = error.response?.data?.message || 'Error de conexión';
+      const errorMessage = error.response?.data?.message || error.message || 'Error de conexión';
       setError(errorMessage);
       console.error('Error en login:', error);
     } finally {
