@@ -1,19 +1,19 @@
 package com.sordi.userManagement.config;
 
 import org.flywaydb.core.Flyway;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
+import com.zaxxer.hikari.HikariDataSource;
 
 import javax.sql.DataSource;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * Configuración de DataSource para Railway
+ * Configuración  de DataSource para Railway
  *
  * Railway proporciona DATABASE_URL en formato: postgresql://user:pass@host:port/db
  * Spring Boot necesita: jdbc:postgresql://host:port/db
@@ -26,7 +26,6 @@ public class RailwayDataSourceConfig {
 
     @Bean
     @Primary
-    @ConfigurationProperties("spring.datasource.hikari")
     public DataSource dataSource() {
         String databaseUrl = System.getenv("DATABASE_URL");
 
@@ -34,8 +33,13 @@ public class RailwayDataSourceConfig {
             return createRailwayDataSource(databaseUrl);
         }
 
-        // Fallback para desarrollo local (usa application-prod.yml)
-        return DataSourceBuilder.create().build();
+        // Fallback para desarrollo local
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setJdbcUrl("jdbc:postgresql://localhost:5432/user_management?sslmode=disable&ApplicationName=user-management-api");
+        dataSource.setUsername("user");
+        dataSource.setPassword("1234");
+        dataSource.setDriverClassName("org.postgresql.Driver");
+        return dataSource;
     }
 
     /**
@@ -57,6 +61,7 @@ public class RailwayDataSourceConfig {
                 .cleanDisabled(true)
                 .load();
     }
+
     /**
      * Crea un DataSource a partir de la URL proporcionada por Railway
      * La URL debe estar en el formato: postgresql://user:pass@host:port/db
@@ -78,13 +83,21 @@ public class RailwayDataSourceConfig {
             String username = userInfo[0];
             String password = userInfo[1];
 
-            return DataSourceBuilder
-                    .create()
-                    .url(jdbcUrl)
-                    .username(username)
-                    .password(password)
-                    .driverClassName("org.postgresql.Driver")
-                    .build();
+            // Crear HikariDataSource manualmente con configuración completa
+            HikariDataSource dataSource = new HikariDataSource();
+            dataSource.setJdbcUrl(jdbcUrl);
+            dataSource.setUsername(username);
+            dataSource.setPassword(password);
+            dataSource.setDriverClassName("org.postgresql.Driver");
+
+            // Configuración de pool para Railway
+            dataSource.setMaximumPoolSize(3);
+            dataSource.setMinimumIdle(1);
+            dataSource.setConnectionTimeout(10000);
+            dataSource.setIdleTimeout(180000);
+            dataSource.setMaxLifetime(600000);
+
+            return dataSource;
 
         } catch (URISyntaxException e) {
             throw new RuntimeException("Error parsing DATABASE_URL from Railway: " + e.getMessage(), e);
