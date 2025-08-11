@@ -59,7 +59,7 @@ jwt:
   audience: ${JWT_AUDIENCE:user-management-api-audience}
 
 server:
-  port: ${SERVER-PORT:8080}
+  port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api  # Agregar context path para Railway
   error:
@@ -72,7 +72,7 @@ logging:
   level:
     com.sordi.userManagement: ${LOG_LEVEL_APP:INFO}
     org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
-    org.hibernate.SQL: ${SHOW_SQL:false}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:OFF}
     org.hibernate.type: OFF
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"

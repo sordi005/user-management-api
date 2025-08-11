@@ -38,13 +38,41 @@ public class JwtTokenProvider {
     @PostConstruct
     public void init() {
         try {
-            // Convierte la clave string de JwtConfig en SecretKey segura
-            this.secretKey = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
-            log.info("JwtTokenProvider inicializado correctamente");
+            String secret = jwtConfig.getSecret();
+
+            // Verificar que la clave tenga al menos 64 caracteres para HS512
+            if (secret.length() < 64) {
+                log.warn("La clave JWT tiene solo {} caracteres. HS512 requiere al menos 64 caracteres.", secret.length());
+                // Expandir la clave para cumplir con los requisitos de HS512
+                secret = expandSecret(secret);
+                log.info("Clave JWT expandida para cumplir con requisitos de seguridad HS512");
+            }
+
+            // Convierte la clave string en SecretKey segura
+            this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+            log.info("JwtTokenProvider inicializado correctamente con clave de {} bits", secret.length() * 8);
         } catch (Exception e) {
             log.error("Error inicializando JwtTokenProvider: {}", e.getMessage());
             throw new IllegalArgumentException("Error inicializando el proveedor de tokens JWT");
         }
+    }
+
+    /**
+     * Expande una clave corta para cumplir con los requisitos mínimos de HS512.
+     *
+     * @param originalSecret La clave original
+     * @return Una clave expandida de al menos 64 caracteres
+     */
+    private String expandSecret(String originalSecret) {
+        StringBuilder expandedSecret = new StringBuilder();
+
+        // Repetir la clave original hasta alcanzar al menos 64 caracteres
+        while (expandedSecret.length() < 64) {
+            expandedSecret.append(originalSecret);
+        }
+
+        // Truncar a exactamente 64 caracteres para consistencia
+        return expandedSecret.substring(0, 64);
     }
 
     /**
