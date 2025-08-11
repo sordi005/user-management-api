@@ -436,5 +436,36 @@ export const logoutUser = () => {
   window.location.href = '/login'; // Redirige a login
 };
 
+/**
+ * Función helper para registro completo
+ * Realiza registro de nuevo usuario
+ *
+ * @param {Object} userData - Datos del nuevo usuario
+ * @returns {Promise<Object>} {success: boolean, data?: Object, error?: string}
+ */
+export const registerUser = async (userData) => {
+  try {
+    const response = await authAPI.register(userData);
+
+    if (response.success) {
+      return {
+        success: true,
+        data: response.data,
+        message: response.message
+      };
+    } else {
+      return {
+        success: false,
+        error: response.message || 'Error en registro'
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Error de conexión'
+    };
+  }
+};
+
 // Exportar instancia para usar en authService.js y userService.js
 export default axiosInstance;
