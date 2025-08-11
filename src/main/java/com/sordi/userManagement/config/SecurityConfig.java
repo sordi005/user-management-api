@@ -68,6 +68,12 @@ public class SecurityConfig {
 
             // Configurar qué endpoints requieren autenticación
             .authorizeHttpRequests(auth -> auth
+                // ACTUATOR - ESPECÍFICOS PRIMERO (orden importante)
+                .requestMatchers("/actuator/health").permitAll()        // Solo health básico público
+                .requestMatchers("/api/actuator/health").permitAll()    // Solo health básico con context path
+                .requestMatchers("/actuator/**").hasRole("ADMIN")       // Otros endpoints solo ADMIN
+                .requestMatchers("/api/actuator/**").hasRole("ADMIN")   // Otros endpoints solo ADMIN
+
                 // ENDPOINTS PÚBLICOS (sin autenticación)
                 .requestMatchers("/api/auth/**").permitAll()        // Login, register
                 .requestMatchers("/h2-console/**").permitAll()         // Base de datos H2 - solo desarrollo
@@ -75,7 +81,6 @@ public class SecurityConfig {
                 // ENDPOINTS OPCIONALES
                 .requestMatchers("/swagger-ui/**").permitAll()         //  Documentación Swagger
                 .requestMatchers("/v3/api-docs/**").permitAll()        //  Datos para Swagger
-                .requestMatchers("/actuator/**").permitAll()           //  Monitoreo de aplicación
 
                 // ENDPOINTS PRIVADOS CON ROLES
                 .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")  // Usuarios autenticados
