@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
  * Configuración de seguridad para la aplicación.
@@ -56,8 +57,11 @@ public class SecurityConfig {
      * Bean de SecurityFilterChain - Define las reglas de seguridad de la aplicación.
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
+            // CONFIGURAR CORS PARA DESARROLLO LOCAL
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
+
             // Deshabilitar Cross-Site Request Forgery (CSRF)
             .csrf(AbstractHttpConfigurer::disable)
 
