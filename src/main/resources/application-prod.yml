@@ -45,7 +45,7 @@ jwt:
   audience: ${JWT_AUDIENCE:user-management-api-audience}
 
 server:
-  port: ${PORT:8080}
+  port: ${SERVER-PORT:8080}
   error:
     include-message: never
     include-binding-errors: never

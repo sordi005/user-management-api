@@ -13,7 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * Configuración  de DataSource para Railway
+ * Configuración de DataSource para Railway
  *
  * Railway proporciona DATABASE_URL en formato: postgresql://user:pass@host:port/db
  * Spring Boot necesita: jdbc:postgresql://host:port/db
@@ -28,18 +28,26 @@ public class RailwayDataSourceConfig {
     @Primary
     public DataSource dataSource() {
         String databaseUrl = System.getenv("DATABASE_URL");
+        String activeProfile = System.getenv("SPRING_PROFILES_ACTIVE");
+
+        // Logging para debug
+        System.out.println("=== RAILWAY DEBUG ===");
+        System.out.println("Active Profile: " + activeProfile);
+        System.out.println("DATABASE_URL exists: " + (databaseUrl != null));
+        if (databaseUrl != null) {
+            System.out.println("DATABASE_URL starts with postgresql://: " + databaseUrl.startsWith("postgresql://"));
+            // Solo mostrar los primeros caracteres por seguridad
+            System.out.println("DATABASE_URL preview: " + databaseUrl.substring(0, Math.min(20, databaseUrl.length())) + "...");
+        }
+        System.out.println("=====================");
 
         if (databaseUrl != null && databaseUrl.startsWith("postgresql://")) {
+            System.out.println("Using Railway DATABASE_URL configuration");
             return createRailwayDataSource(databaseUrl);
         }
 
-        // Fallback para desarrollo local
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:postgresql://localhost:5432/user_management?sslmode=disable&ApplicationName=user-management-api");
-        dataSource.setUsername("user");
-        dataSource.setPassword("1234");
-        dataSource.setDriverClassName("org.postgresql.Driver");
-        return dataSource;
+        // En perfil prod, si no hay DATABASE_URL de Railway, algo está mal
+        throw new RuntimeException("Profile 'prod' requires DATABASE_URL from Railway, but it was not found or invalid format");
     }
 
     /**
