@@ -60,6 +60,8 @@ jwt:
 
 server:
   port: ${SERVER-PORT:8080}
+  servlet:
+    context-path: /api  # Agregar context path para Railway
   error:
     include-message: never
     include-binding-errors: never
