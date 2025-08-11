@@ -75,7 +75,12 @@ public class SecurityConfig {
                 // ENDPOINTS OPCIONALES
                 .requestMatchers("/swagger-ui/**").permitAll()         //  Documentación Swagger
                 .requestMatchers("/v3/api-docs/**").permitAll()        //  Datos para Swagger
-                .requestMatchers("/actuator/**").permitAll()           //  Monitoreo de aplicación
+
+                // ACTUATOR - Solo health básico público (sin detalles)
+                .requestMatchers("/actuator/health").permitAll()        // Solo health básico
+                .requestMatchers("/api/actuator/health").permitAll()    // Solo health básico con context path
+                .requestMatchers("/actuator/**").hasRole("ADMIN")       // Otros endpoints solo ADMIN
+                .requestMatchers("/api/actuator/**").hasRole("ADMIN")   // Otros endpoints solo ADMIN
 
                 // ENDPOINTS PRIVADOS CON ROLES
                 .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")  // Usuarios autenticados
