@@ -1,6 +1,5 @@
 package com.sordi.userManagement.config;
 
-import org.flywaydb.core.Flyway;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,26 +47,6 @@ public class RailwayDataSourceConfig {
 
         // En perfil prod, si no hay DATABASE_URL de Railway, algo está mal
         throw new RuntimeException("Profile 'prod' requires DATABASE_URL from Railway, but it was not found or invalid format");
-    }
-
-    /**
-     * Configuración de Flyway para gestionar migraciones de base de datos
-     * Esta configuración se aplica en producción
-     * y utiliza el DataSource proporcionado por Railway
-     * para realizar las migraciones de esquema.
-     * @param dataSource
-     * @return Flyway instance
-     */
-    @Bean
-    public Flyway flyway(DataSource dataSource) {
-        return Flyway.configure()
-                .dataSource(dataSource)
-                .locations("classpath:db/migration")
-                .table("flyway_schema_history")
-                .baselineOnMigrate(true)
-                .validateOnMigrate(true)
-                .cleanDisabled(true)
-                .load();
     }
 
     /**
