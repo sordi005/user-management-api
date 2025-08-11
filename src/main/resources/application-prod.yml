@@ -1,9 +1,11 @@
 spring:
+  # DataSource configurado automáticamente por RailwayDataSourceConfig.java
+  # En Railway usa DATABASE_URL automática, en local usa configuración fallback
   datasource:
-    # Configuración que funciona tanto para desarrollo local como Railway
-    # Local: jdbc:postgresql://localhost:5432/user_management?sslmode=disable&ApplicationName=user-management-api
-    # Railway: postgresql://postgres:password@host:port/database (se agrega jdbc: automáticamente)
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/user_management?sslmode=disable&ApplicationName=user-management-api}
+    # Configuración fallback para desarrollo local
+    url: jdbc:postgresql://localhost:${DB_HOST:5432}}/user_management?sslmode=${DB_SSL_MODE:disable}&ApplicationName=${DB_APP_NAME:user-management-api}
+    username: ${DB_USERNAME:user}
+    password: ${DB_PASSWORD:1234}
     driver-class-name: org.postgresql.Driver
     hikari:
       # Para app pequeña - máximo 10 usuarios
