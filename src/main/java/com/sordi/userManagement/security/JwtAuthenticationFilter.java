@@ -51,6 +51,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
 
         try {
+            // Verificar si es un endpoint público - NO procesar JWT
+            if (isPublicEndpoint(request)) {
+                log.debug("Saltando procesamiento JWT para endpoint público: {}", request.getRequestURI());
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             // Extraer el token JWT del header Authorization
             String jwt = extractTokenFromRequest(request);
 
@@ -106,5 +113,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+    /**
+     * Verifica si el endpoint es público y no requiere autenticación JWT.
+     *
+     * @param request petición HTTP
+     * @return true si es un endpoint público, false si requiere autenticación
+     */
+    private boolean isPublicEndpoint(HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        // Lista de endpoints públicos que NO requieren JWT
+        return path.startsWith("/api/auth/") ||           // Autenticación
+               path.startsWith("/actuator/health") ||     // Health check
+               path.startsWith("/api/actuator/health") ||  // Health check con context path
+               path.startsWith("/swagger-ui/") ||          // Swagger UI
+               path.startsWith("/v3/api-docs/") ||         // Swagger docs
+               path.startsWith("/h2-console/");            // H2 console (desarrollo)
     }
 }
