@@ -396,13 +396,14 @@ export const adminAPI = {
  * Función helper para manejar login completo
  * Realiza login y guarda tokens automáticamente
  *
- * @param {string} username - Username
- * @param {string} password - Password
+ * @param {Object} loginData - Datos de login del formulario
+ * @param {string} loginData.username - Username
+ * @param {string} loginData.password - Password
  * @returns {Promise<Object>} {success: boolean, user?: Object, error?: string}
  */
-export const loginUser = async (username, password) => {
+export const loginUser = async (loginData) => {
   try {
-    const response = await authAPI.login(username, password);
+    const response = await authAPI.login(loginData.username, loginData.password);
 
     if (response.success) {
       // Guardar tokens usando la función saveToken
