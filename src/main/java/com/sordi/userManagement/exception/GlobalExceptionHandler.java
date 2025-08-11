@@ -170,10 +170,17 @@ public class GlobalExceptionHandler {
 
     /**
      * Maneja todos los demás errores no específicos (500)
+     * EXCLUYE los endpoints del actuator para permitir que funcionen correctamente
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(
             Exception ex, HttpServletRequest request) {
+
+        // No interceptar errores del actuator - dejar que Spring Boot los maneje
+        String requestPath = request.getRequestURI();
+        if (requestPath.startsWith("/actuator") || requestPath.startsWith("/api/actuator")) {
+            throw new RuntimeException(ex); // Re-lanzar para que Spring Boot lo maneje
+        }
 
         log.error("Error interno del servidor: ", ex);
 
