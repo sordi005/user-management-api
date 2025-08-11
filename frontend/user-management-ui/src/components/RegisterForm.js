@@ -24,6 +24,7 @@ const RegisterForm = () => {
       firstName: '',
       lastName: '',
       dni: '',
+      dateOfBirth: '',
       email: '',
       username: '',
       password: '',
@@ -60,9 +61,23 @@ const RegisterForm = () => {
       return false;
     }
 
-    // Validar longitud mínima de contraseña
+    // Validar longitud mínima de contraseña (CORREGIDO: era 6, ahora 8)
     if (formData.password.length < 8) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+      setError('La contraseña debe tener al menos 8 caracteres');
+      return false;
+    }
+
+    // Validar patrón de contraseña (NUEVO: coincide con backend)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      setError('La contraseña debe contener: minúscula, mayúscula, número y carácter especial (@$!%*?&)');
+      return false;
+    }
+
+    // Validar DNI (NUEVO: coincide con backend)
+    const dniRegex = /^[0-9]{7,10}$/;
+    if (!dniRegex.test(formData.dni)) {
+      setError('El DNI debe tener entre 7 y 10 dígitos');
       return false;
     }
 
@@ -70,6 +85,12 @@ const RegisterForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError('Por favor ingresa un email válido');
+      return false;
+    }
+
+    // Validar fecha de nacimiento (NUEVO)
+    if (!formData.dateOfBirth) {
+      setError('La fecha de nacimiento es requerida');
       return false;
     }
 
@@ -99,6 +120,7 @@ const RegisterForm = () => {
         firstName: formData.firstName,
         lastName: formData.lastName,
         dni: formData.dni,
+        dateOfBirth: formData.dateOfBirth, // ← AGREGADO: Enviar dateOfBirth
         email: formData.email,
         username: formData.username,
         password: formData.password
@@ -116,6 +138,7 @@ const RegisterForm = () => {
             firstName: '',
             lastName: '',
             dni : "",
+            dateOfBirth: '', // ← AGREGADO: Limpiar dateOfBirth
             email: '',
             username: '',
             password: '',
@@ -146,44 +169,6 @@ const RegisterForm = () => {
       <p>Registro en User Management API</p>
 
       <form onSubmit={handleSubmit}>
-        {/* Campo Username */}
-        <div style={{ marginBottom: '15px' }}>
-          <label>Usuario:</label>
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleInputChange}
-            required
-            style={{
-              width: '100%',
-              padding: '8px',
-              marginTop: '5px',
-              border: '1px solid #ccc',
-              borderRadius: '4px'
-            }}
-          />
-        </div>
-
-        {/* Campo Email */}
-        <div style={{ marginBottom: '15px' }}>
-          <label>Email:</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            required
-            style={{
-              width: '100%',
-              padding: '8px',
-              marginTop: '5px',
-              border: '1px solid #ccc',
-              borderRadius: '4px'
-            }}
-          />
-        </div>
-
         {/* Campo First Name */}
         <div style={{ marginBottom: '15px' }}>
           <label>Nombre:</label>
@@ -222,6 +207,86 @@ const RegisterForm = () => {
           />
         </div>
 
+        {/* Campo DNI */}
+        <div style={{ marginBottom: '15px' }}>
+          <label>DNI (7-10 dígitos):</label>
+          <input
+            type="text"
+            name="dni"
+            value={formData.dni}
+            onChange={handleInputChange}
+            placeholder="12345678"
+            pattern="[0-9]{7,10}"
+            required
+            style={{
+              width: '100%',
+              padding: '8px',
+              marginTop: '5px',
+              border: '1px solid #ccc',
+              borderRadius: '4px'
+            }}
+          />
+        </div>
+
+        {/* Campo Date of Birth */}
+        <div style={{ marginBottom: '15px' }}>
+          <label>Fecha de Nacimiento:</label>
+          <input
+            type="date"
+            name="dateOfBirth"
+            value={formData.dateOfBirth}
+            onChange={handleInputChange}
+            required
+            style={{
+              width: '100%',
+              padding: '8px',
+              marginTop: '5px',
+              border: '1px solid #ccc',
+              borderRadius: '4px'
+            }}
+          />
+        </div>
+
+        {/* Campo Email */}
+        <div style={{ marginBottom: '15px' }}>
+          <label>Email:</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            placeholder="usuario@ejemplo.com"
+            required
+            style={{
+              width: '100%',
+              padding: '8px',
+              marginTop: '5px',
+              border: '1px solid #ccc',
+              borderRadius: '4px'
+            }}
+          />
+        </div>
+
+        {/* Campo Username */}
+        <div style={{ marginBottom: '15px' }}>
+          <label>Nombre de Usuario:</label>
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleInputChange}
+            placeholder="mi_usuario"
+            required
+            style={{
+              width: '100%',
+              padding: '8px',
+              marginTop: '5px',
+              border: '1px solid #ccc',
+              borderRadius: '4px'
+            }}
+          />
+        </div>
+
         {/* Campo Password */}
         <div style={{ marginBottom: '15px' }}>
           <label>Contraseña:</label>
@@ -230,6 +295,7 @@ const RegisterForm = () => {
             name="password"
             value={formData.password}
             onChange={handleInputChange}
+            placeholder="Mín. 8 chars: A-Z, a-z, 0-9, @$!%*?&"
             required
             style={{
               width: '100%',
@@ -249,6 +315,7 @@ const RegisterForm = () => {
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleInputChange}
+            placeholder="Repite la contraseña"
             required
             style={{
               width: '100%',
