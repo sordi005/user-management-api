@@ -3,7 +3,7 @@ spring:
   # En Railway usa DATABASE_URL automática, en local usa configuración fallback
   datasource:
     # Configuración fallback para desarrollo local
-    url: jdbc:postgresql://localhost:${DB_HOST:5432}}/user_management?sslmode=${DB_SSL_MODE:disable}&ApplicationName=${DB_APP_NAME:user-management-api}
+    url: jdbc:postgresql://localhost:${DB_PORT:5432}/user_management?sslmode=${DB_SSL_MODE:disable}&ApplicationName=${DB_APP_NAME:user-management-api}
     username: ${DB_USERNAME:user}
     password: ${DB_PASSWORD:1234}
     driver-class-name: org.postgresql.Driver
@@ -36,6 +36,22 @@ spring:
     encoding: UTF-8
     validate-on-migrate: true
     baseline-on-migrate: true
+
+# Configuración de Actuator para Railway (Segura)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never  # Cambiado de 'always' a 'never'
+      show-components: never
+      probes:
+        enabled: true
+  server:
+    port: 8080
 
 jwt:
   secret: ${JWT_SECRET:A8k9L3mN7pQ2sT6vY1wZ5xC4bF8dG9hJ2kL7nM4}
