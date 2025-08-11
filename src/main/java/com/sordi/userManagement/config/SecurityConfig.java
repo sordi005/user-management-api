@@ -75,16 +75,19 @@ public class SecurityConfig {
                 .requestMatchers("/api/actuator/**").hasRole("ADMIN")   // Otros endpoints solo ADMIN
 
                 // ENDPOINTS PÚBLICOS (sin autenticación)
-                .requestMatchers("/api/auth/**").permitAll()        // Login, register
+                .requestMatchers("/auth/**").permitAll()               // Login, register (sin context-path)
+                .requestMatchers("/api/auth/**").permitAll()           // Login, register (con context-path /api)
                 .requestMatchers("/h2-console/**").permitAll()         // Base de datos H2 - solo desarrollo
 
                 // ENDPOINTS OPCIONALES
-                .requestMatchers("/swagger-ui/**").permitAll()         //  Documentación Swagger
-                .requestMatchers("/v3/api-docs/**").permitAll()        //  Datos para Swagger
+                .requestMatchers("/swagger-ui/**").permitAll()          // Documentación Swagger
+                .requestMatchers("/v3/api-docs/**").permitAll()         // Datos para Swagger
 
                 // ENDPOINTS PRIVADOS CON ROLES
-                .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")  // Usuarios autenticados
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")             // Solo administradores
+                .requestMatchers("/users/**").hasAnyRole("USER", "ADMIN")      // Usuarios autenticados (sin context-path)
+                .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")  // Usuarios autenticados (con context-path /api)
+                .requestMatchers("/admin/**").hasRole("ADMIN")                 // Solo administradores (sin context-path)
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")             // Solo administradores (con context-path /api)
 
                 // ENDPOINTS PRIVADOS (requieren autenticación)
                 .anyRequest().authenticated()

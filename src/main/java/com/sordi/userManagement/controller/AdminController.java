@@ -16,7 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController                    // Controlador REST para manejar usuarios
-@RequestMapping("/api/admin/users")     //uRL base para los endpoints de usuario
+@RequestMapping("/admin/users")   // Cambiar de "/api/admin/users" a solo "/admin/users"
 @RequiredArgsConstructor
 @Slf4j
 @Validated
@@ -24,7 +24,7 @@ public class AdminController {
     private final UserService userService;
     /**
      * Método para crear un nuevo usuario
-     * URL: POST /api/admin/users
+     * URL: POST /admin/users
      */
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
@@ -46,7 +46,7 @@ public class AdminController {
     }
     /**
      * Método para obtener todos los usuarios con paginación
-     * URL: GET /api/admin/users?page=0&size=10
+     * URL: GET /admin/users?page=0&size=10
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -61,7 +61,7 @@ public class AdminController {
 
     /**
      * Método para obtener un usuario por su ID
-     * URL: GET /api/admin/users/123
+     * URL: GET /admin/users/123
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -73,7 +73,7 @@ public class AdminController {
 
     /**
      * Método para actualizar un usuario existente
-     * URL: PUT /api/users/admin/123
+     * URL: PUT /users/admin/123
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -85,7 +85,7 @@ public class AdminController {
 
     /**
      * Método para eliminar un usuario
-     * URL: DELETE /api/admin/users/123
+     * URL: DELETE /admin/users/123
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")

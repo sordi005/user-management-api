@@ -12,7 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController                    // Controlador REST para manejar usuarios
-@RequestMapping("/api/users")     // URL base para los endpoints de usuario
+@RequestMapping("/users")         // Cambiar de "/api/users" a solo "/users"
 @RequiredArgsConstructor
 @Slf4j
 @Validated
@@ -22,7 +22,7 @@ public class UserController {
 
     /**
      * Método para obtener el perfil del usuario autenticado
-     * URL: GET /api/users/me
+     * URL: GET /users/me
      */
     @GetMapping("/me")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -34,7 +34,7 @@ public class UserController {
 
     /**
      * Método para actualizar el perfil del usuario autenticado
-     * URL: PUT /api/users/me
+     * URL: PUT /users/me
      */
     @PutMapping("/me")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")

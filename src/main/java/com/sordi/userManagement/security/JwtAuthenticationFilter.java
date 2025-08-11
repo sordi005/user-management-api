@@ -125,11 +125,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         // Lista de endpoints públicos que NO requieren JWT
-        return path.startsWith("/api/auth/") ||           // Autenticación
+        return path.startsWith("/auth/") ||               // Desarrollo local (sin context-path)
+               path.startsWith("/api/auth/") ||           // Producción (con context-path /api)
                path.startsWith("/actuator/health") ||     // Health check
                path.startsWith("/api/actuator/health") ||  // Health check con context path
                path.startsWith("/swagger-ui/") ||          // Swagger UI
+               path.startsWith("/api/swagger-ui/") ||      // Swagger UI con context path
                path.startsWith("/v3/api-docs/") ||         // Swagger docs
+               path.startsWith("/api/v3/api-docs/") ||     // Swagger docs con context path
                path.startsWith("/h2-console/");            // H2 console (desarrollo)
     }
 }
