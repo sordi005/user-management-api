@@ -1,5 +1,6 @@
 package com.sordi.userManagement.config;
 
+import org.flywaydb.core.Flyway;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * Configuración profesional de DataSource para Railway
+ * Configuración de DataSource para Railway
  *
  * Railway proporciona DATABASE_URL en formato: postgresql://user:pass@host:port/db
  * Spring Boot necesita: jdbc:postgresql://host:port/db
@@ -37,7 +38,31 @@ public class RailwayDataSourceConfig {
         return DataSourceBuilder.create().build();
     }
 
-
+    /**
+     * Configuración de Flyway para gestionar migraciones de base de datos
+     * Esta configuración se aplica en producción
+     * y utiliza el DataSource proporcionado por Railway
+     * para realizar las migraciones de esquema.
+     * @param dataSource
+     * @return Flyway instance
+     */
+    @Bean
+    public Flyway flyway(DataSource dataSource) {
+        return Flyway.configure()
+                .dataSource(dataSource)
+                .locations("classpath:db/migration")
+                .table("flyway_schema_history")
+                .baselineOnMigrate(true)
+                .validateOnMigrate(true)
+                .cleanDisabled(true)
+                .load();
+    }
+    /**
+     * Crea un DataSource a partir de la URL proporcionada por Railway
+     * La URL debe estar en el formato: postgresql://user:pass@host:port/db
+     * @param databaseUrl La URL de la base de datos proporcionada por Railway
+     * @return DataSource configurado para conectarse a la base de datos
+     */
     private DataSource createRailwayDataSource(String databaseUrl) {
         try {
             URI dbUri = new URI(databaseUrl);
