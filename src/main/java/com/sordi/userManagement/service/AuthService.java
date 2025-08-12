@@ -118,8 +118,8 @@ public class AuthService {
                     return new RuntimeException("Error interno de autenticación");
                 });
 
-            //  Generar JWT token y refresh token
-            String accessToken = jwtTokenProvider.generateToken(user.getUsername());
+            //  Generar JWT token y refresh token CON ROLES
+            String accessToken = jwtTokenProvider.generateToken(user.getUsername(), user.getRole().name());
             String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
 
             log.info("Login exitoso para usuario: {}", user.getUsername());
@@ -168,7 +168,7 @@ public class AuthService {
                 });
 
             // Generar nuevo access token (y opcionalmente nuevo refresh token)
-            String newAccessToken = jwtTokenProvider.generateToken(user.getUsername());
+            String newAccessToken = jwtTokenProvider.generateToken(user.getUsername(), user.getRole().name());
             String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
 
             log.info("Token renovado exitosamente para usuario: {}", username);
