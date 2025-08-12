@@ -46,6 +46,15 @@ function App() {
   };
 
   /**
+   * NUEVO: Maneja el login exitoso
+   * Se ejecuta cuando LoginForm completa la autenticación
+   */
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+    console.log('🎉 Estado de autenticación actualizado - Redirigiendo al dashboard');
+  };
+
+  /**
    * Maneja logout del usuario
    */
   const handleLogout = () => {
@@ -161,7 +170,7 @@ function App() {
 
       {/* Contenido principal */}
       <div style={{ padding: '20px' }}>
-        {currentView === 'login' && <LoginForm />}
+        {currentView === 'login' && <LoginForm onLoginSuccess={handleLoginSuccess} />}
         {currentView === 'register' && <RegisterForm />}
       </div>
 
