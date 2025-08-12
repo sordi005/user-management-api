@@ -14,7 +14,7 @@
 import React, { useState } from 'react';
 import { loginUser } from '../services/api';
 
-const LoginForm = () => {
+const LoginForm = ({ onLoginSuccess }) => {
   // ===========================
   // ESTADO DEL COMPONENTE
   // ===========================
@@ -66,8 +66,14 @@ const LoginForm = () => {
         setMessage('¡Login exitoso! Redirigiendo...');
 
         // El token se guarda automáticamente en api.js
-        // TODO: Aquí redirigirías al dashboard
         console.log('Usuario logueado:', response.user);
+
+        // NUEVO: Notificar al componente padre que el login fue exitoso
+        if (onLoginSuccess) {
+          setTimeout(() => {
+            onLoginSuccess();
+          }, 1000); // Esperar 1 segundo para mostrar el mensaje
+        }
       } else {
         // Mostrar error devuelto por la API
         setError(response.error || 'Error en el login');
