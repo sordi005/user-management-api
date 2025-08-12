@@ -14,6 +14,8 @@
 import React, { useState } from 'react';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
+import UserManagement from './components/admin/UserManagement';
+import UserProfile from './components/UserProfile';
 import { isAuthenticated, getTokenInfo } from './services/api';
 
 function App() {
@@ -68,56 +70,96 @@ function App() {
   // RENDERIZADO CONDICIONAL
   // ===========================
 
-  // Si el usuario está autenticado, mostrar dashboard básico
+  // Si el usuario está autenticado, mostrar dashboard correspondiente
   if (isLoggedIn) {
     const tokenInfo = getTokenInfo();
 
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h1>🎉 ¡Bienvenido al User Management System!</h1>
-        <p>✅ Estás autenticado correctamente</p>
+    // Verificar si es administrador (decodificar JWT)
+    const isAdmin = () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) return false;
 
-        {/* Info de debugging */}
-        <div style={{
-          margin: '20px auto',
-          padding: '15px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-          maxWidth: '500px',
-          textAlign: 'left'
-        }}>
-          <h3>📊 Estado de tu sesión:</h3>
-          <ul>
-            <li>Token activo: {tokenInfo.hasToken ? '✅ Sí' : '❌ No'}</li>
-            <li>Refresh token: {tokenInfo.hasRefreshToken ? '✅ Disponible' : '❌ No disponible'}</li>
-            <li>Expira en: {tokenInfo.expiresIn} segundos</li>
-            <li>Emitido: {tokenInfo.issuedAt}</li>
-          </ul>
-        </div>
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
 
-        {/* Acciones disponibles */}
-        <div style={{ marginTop: '30px' }}>
-          <h3>🔧 Próximas funcionalidades:</h3>
-          <p>• UserManagement (CRUD de usuarios)</p>
-          <p>• Panel de administrador</p>
-          <p>• Perfil de usuario</p>
-        </div>
+        // Verificar diferentes formas en que el rol puede estar en el token
+        const role = tokenPayload.role;
+        const authorities = tokenPayload.authorities;
 
-        {/* Botón de logout */}
-        <button
-          onClick={handleLogout}
-          style={{
-            marginTop: '30px',
-            padding: '10px 20px',
-            backgroundColor: '#dc3545',
+        // Verificar si es ADMIN por rol directo o por authorities
+        return role === 'ADMIN' || authorities === 'ROLE_ADMIN' ||
+               (Array.isArray(authorities) && authorities.includes('ROLE_ADMIN'));
+      } catch (error) {
+        console.error('Error verificando permisos de admin:', error);
+        return false;
+      }
+    };
+
+    // Si es administrador, mostrar panel de administración
+    if (isAdmin()) {
+      return (
+        <div>
+          {/* Header del administrador */}
+          <div style={{
+            padding: '15px 20px',
+            backgroundColor: '#343a40',
             color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          🚪 Cerrar Sesión
-        </button>
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <h2 style={{ margin: 0 }}>🔧 Panel de Administrador</h2>
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              🚪 Cerrar Sesión
+            </button>
+          </div>
+
+          {/* Componente de gestión de usuarios */}
+          <UserManagement />
+        </div>
+      );
+    }
+
+    // Si es usuario normal, mostrar panel de perfil
+    return (
+      <div>
+        {/* Header del usuario normal */}
+        <div style={{
+          padding: '15px 20px',
+          backgroundColor: '#28a745',
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h2 style={{ margin: 0 }}>👤 Panel de Usuario</h2>
+          <button
+            onClick={handleLogout}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            🚪 Cerrar Sesión
+          </button>
+        </div>
+
+        {/* Componente de perfil de usuario */}
+        <UserProfile />
       </div>
     );
   }

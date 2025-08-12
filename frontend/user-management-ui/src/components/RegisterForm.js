@@ -163,8 +163,10 @@ const RegisterForm = () => {
 
         // TODO: Redirigir al login después de unos segundos
         console.log('Usuario registrado:', response.data);
+      } else {
+        // ARREGLO: Manejar errores controlados que vienen en response.error
+        setError(response.error || 'Error en el registro');
       }
-
     } catch (error) {
       // Manejar errores del backend (409 Conflict, 400 Bad Request, etc.)
       const errorMessage = error.response?.data?.message || error.message || 'Error de conexión';

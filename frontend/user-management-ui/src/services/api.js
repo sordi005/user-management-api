@@ -6,10 +6,11 @@
  * ENDPOINTS DISPONIBLES EN EL BACKEND:
  * - POST /auth/login          → AuthController.loginUser()
  * - POST /auth/register       → AuthController.registerUser()
- * - GET /users                → UserController.getAllUsers() [ROLE_USER, ROLE_ADMIN]
- * - POST /users               → AdminController.createUser() [ROLE_ADMIN]
- * - PUT /users/{id}           → AdminController.updateUser() [ROLE_ADMIN]
- * - DELETE /users/{id}        → AdminController.deleteUser() [ROLE_ADMIN]
+ * - GET /admin/users          → AdminController.getAllUsers() [ROLE_ADMIN]
+ * - POST /admin/users/create  → AdminController.createUser() [ROLE_ADMIN]
+ * - PUT /admin/users/{id}     → AdminController.updateUser() [ROLE_ADMIN]
+ * - DELETE /admin/users/{id}  → AdminController.deleteUser() [ROLE_ADMIN]
+ * - GET /admin/users/{id}     → AdminController.getUserById() [ROLE_ADMIN]
  *
  * CONFIGURACIÓN JWT:
  * - Token almacenado en localStorage como 'auth_token'
@@ -17,7 +18,7 @@
  * - Expiración configurada en application-dev.yml (1 hora por defecto)
  *
  * PROFILES Y URLS:
- * - Desarrollo: http://localhost:8080 (profile dev, docekr-compose)
+ * - Desarrollo: http://localhost:8080 (profile dev, docker-compose)
  * - Producción: https://user-management-api-production-51b2.up.railway.app (profile prod, Railway)
  */
 
@@ -42,30 +43,26 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
  * Crea un cliente HTTP configurado específicamente para tu Spring Boot application.
  */
 const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,        //  UserManagementApiApplication (localhost:8080 o Railway)
+  baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',  // Para enviar/recibir JSON a controladores
+    'Content-Type': 'application/json',
   },
 });
 
 /**
  * REQUEST INTERCEPTOR - AUTENTICACIÓN AUTOMÁTICA
  *
- * - FUNCIÓN PRINCIPAL: Agrega automáticamente el JWT token a TODAS las peticiones
- *
+ * Agrega automáticamente el JWT token a TODAS las peticiones
  */
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Obtener token guardado por tu AuthController.loginUser()
     const token = localStorage.getItem('auth_token');
 
-    // Si hay token, agregarlo al header que espera tu SecurityConfig
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Log para debugging - útil para ver qué endpoints estás llamando
     console.log(`🚀 Llamando a tu API: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
@@ -77,20 +74,14 @@ axiosInstance.interceptors.request.use(
 
 /**
  * RESPONSE INTERCEPTOR - MANEJO GLOBAL DE RESPUESTAS Y ERRORES
- **
- * MANEJA AUTOMÁTICAMENTE LOS ERRORES ESPECÍFICOS DE TU SISTEMA:
- **
- * CÓDIGOS DE ERROR QUE DEVUELVE TU BACKEND:
- * - 401 Unauthorized: Token JWT inválido/expirado (JwtTokenProvider validation failed)
- * - 403 Forbidden: Usuario sin permisos (ej: ROLE_USER intentando usar AdminController)
- * - 404 Not Found: Usuario no existe (UserService.findById() no encontró el ID)
- * - 409 Conflict: Datos duplicados (username/email ya existe en PostgreSQL)
- * - 400 Bad Request: Validación falló (@Valid en tus DTOs)
- * - 500 Internal Error: Error en tu código Spring Boot o PostgreSQL
  *
- * ACCIONES AUTOMÁTICAS:
- * - 401: Limpia localStorage y redirige a /login (sesión expirada)
- * - Otros errores: Los propaga para que los manejes en cada componente
+ * CÓDIGOS DE ERROR QUE DEVUELVE TU BACKEND:
+ * - 401 Unauthorized: Token JWT inválido/expirado
+ * - 403 Forbidden: Usuario sin permisos (ej: ROLE_USER intentando usar AdminController)
+ * - 404 Not Found: Usuario no existe
+ * - 409 Conflict: Datos duplicados (username/email ya existe)
+ * - 400 Bad Request: Validación falló (@Valid en tus DTOs) o BusinessException
+ * - 500 Internal Error: Error en tu código Spring Boot o PostgreSQL
  */
 axiosInstance.interceptors.response.use(
   (response) => {
@@ -99,19 +90,34 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     const status = error.response?.status;
-    const message = error.response?.data?.message || error.message;
+    const data = error.response?.data;
+
+    // Extraer el mensaje específico del error desde tu ApiResponse
+    let message = 'Error desconocido';
+
+    if (data) {
+      // Tu backend devuelve ApiResponse con estructura: {success, message, data, status_code, time_stamp, error}
+      // El mensaje específico puede estar en 'error' o en 'message' dependiendo del tipo de error
+      message = data.error || data.message || error.message;
+
+      console.log('🔍 Datos del error:', data);
+      console.log('🔍 Mensaje extraído:', message);
+    } else {
+      message = error.message;
+    }
 
     console.error(`❌ Error desde tu Spring Boot API: ${status} - ${message}`);
 
-    // MANEJO ESPECÍFICO: Token JWT expirado o inválido
-    // Tu JwtTokenProvider detectó que el token no es válido
+    // Token JWT expirado o inválido - limpiar localStorage y redirigir
     if (status === 401) {
       localStorage.removeItem('auth_token');
       console.log('🔒 Token expirado - Redirigiendo a login');
-      window.location.href = '/login';  // Redirige a tu página de login
+      window.location.href = '/login';
     }
 
-    // Propagar error para manejo específico en componentes
+    // Agregar el mensaje específico al error para que sea accesible en las funciones
+    error.specificMessage = message;
+
     return Promise.reject(error);
   }
 );
@@ -122,29 +128,12 @@ axiosInstance.interceptors.response.use(
 
 /**
  * Guarda el JWT token devuelto por AuthController.loginUser()
- *
- * RESPUESTA REAL DE LA API:
- * {
- *   "success": true,
- *   "message": "Login exitoso",
- *   "data": {
- *     "access_token": "eyJ...",     ← Token principal
- *     "token_type": "Bearer",
- *     "expires_in": 3600,
- *     "refresh_token": "eyJ...",    ← Para renovar sesión
- *     "issued_at": "2025-08-11T17:34:29.946719421"
- *   },
- *   "status_code": 200,
- *   "time_stamp": "2025-08-11T17:34:29.946Z"
- * }
  */
 export const saveToken = (loginResponse) => {
-  // Extraer access_token desde la estructura real de tu API
   const accessToken = loginResponse.data.access_token;
   const refreshToken = loginResponse.data.refresh_token;
   const expiresIn = loginResponse.data.expires_in;
 
-  // Guardar tokens en localStorage
   localStorage.setItem('auth_token', accessToken);
   localStorage.setItem('refresh_token', refreshToken);
   localStorage.setItem('token_expires_in', expiresIn);
@@ -173,7 +162,6 @@ export const getRefreshToken = () => {
 
 /**
  * Elimina todos los tokens (logout completo)
- * Limpia: access_token, refresh_token, expires_in, issued_at
  */
 export const removeToken = () => {
   localStorage.removeItem('auth_token');
@@ -195,7 +183,6 @@ export const isAuthenticated = () => {
     return false;
   }
 
-  // Verificar si el token ha expirado
   const issuedTime = new Date(issuedAt).getTime();
   const expirationTime = issuedTime + (parseInt(expiresIn) * 1000);
   const currentTime = new Date().getTime();
@@ -222,8 +209,28 @@ export const getTokenInfo = () => {
   };
 };
 
+/**
+ * Verificar si el usuario actual tiene permisos de administrador
+ */
+export const isUserAdmin = () => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return false;
+
+    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+    const role = tokenPayload.role;
+    const authorities = tokenPayload.authorities;
+
+    return role === 'ADMIN' || authorities === 'ROLE_ADMIN' ||
+           (Array.isArray(authorities) && authorities.includes('ROLE_ADMIN'));
+  } catch (error) {
+    console.error('Error verificando permisos de admin:', error);
+    return false;
+  }
+};
+
 // ==============================================
-// FUNCIONES DE AUTENTICACIÓN
+// API DE AUTENTICACIÓN
 // ==============================================
 
 /**
@@ -233,10 +240,6 @@ export const authAPI = {
   /**
    * Login de usuario
    * Conecta con: POST /auth/login → AuthController.loginUser()
-   *
-   * @param {string} username - Username del usuario
-   * @param {string} password - Contraseña del usuario
-   * @returns {Promise} Respuesta con structure: {success, data: {access_token, refresh_token, ...}, message}
    */
   login: async (username, password) => {
     try {
@@ -244,25 +247,15 @@ export const authAPI = {
         username,
         password
       });
-      return response.data; // Tu estructura: {success, data, message, status_code, time_stamp}
+      return response.data;
     } catch (error) {
-      throw error; // El RESPONSE INTERCEPTOR ya maneja errores globalmente
+      throw error;
     }
   },
 
   /**
    * Registro de nuevo usuario
    * Conecta con: POST /auth/register → AuthController.registerUser()
-   *
-   * @param {Object} userData - Datos del usuario a registrar
-   * @param {string} userData.firstName
-   * @param {string} userData.lastName
-   * @param {string} userData.dateOfBirth
-   * @param {string} userData.dni
-   * @param {string} userData.email
-   * @param {string} userData.username
-   * @param {string} userData.password
-   * @returns {Promise} Respuesta con usuario creado
    */
   register: async (userData) => {
     try {
@@ -273,81 +266,18 @@ export const authAPI = {
     }
   }
 };
-
 // ==============================================
-// FUNCIONES DE GESTIÓN DE USUARIOS
+// API DE ADMINISTRADOR
 // ==============================================
-
 /**
- * API de usuarios - Conecta con UserController y AdminController
- */
-export const userAPI = {
-  /**
-   * Obtener perfil del usuario autenticado
-   * Conecta con: GET /users/me → UserController.getCurrentUser()
-   * Requiere: ROLE_USER o ROLE_ADMIN
-   *
-   * @returns {Promise} Datos del usuario autenticado
-   */
-  getCurrentUser: async () => {
-    try {
-      const response = await axiosInstance.get('/users/me');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-  /**
-   * Actualizar perfil del usuario autenticado
-   * Conecta con: PUT /users/me → UserController.updateCurrentUser()
-   * Requiere: ROLE_USER o ROLE_ADMIN
-   *
-   * @param {Object} userData - Datos actualizados del usuario
-   * @returns {Promise} Usuario actualizado
-   */
-  updateCurrentUser: async (userData) => {
-    try {
-      const response = await axiosInstance.put('/users/me', userData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-};
-
-/**
- * API de administración - Conecta con AdminController REAL
+ * API de administración - Conecta con AdminController
  */
 export const adminAPI = {
   /**
    * Obtener lista de usuarios con paginación (Solo Admin)
-   * Conecta con: GET /admin/users → AdminController que usa UserService.getAllUsers(page, size)
-   * Requiere: ROLE_ADMIN
-   *
-   * MÉTODO REAL EN TU BACKEND:
-   * UserService.getAllUsers(int page, int size) que:
-   * - Valida: page >= 0 && size > 0
-   * - Ordena por: Sort.by("id")
-   * - Retorna: Page<UserResponse> con paginación Spring
-   *
-   * @param {Object} params - Parámetros de consulta para paginación
-   * @param {number} params.page - Número de página (0-based, default: 0)
-   * @param {number} params.size - Tamaño de página (debe ser > 0, default: 10)
-   * @returns {Promise} Page<UserResponse> con estructura:
-   *   {
-   *     content: UserResponse[],     // Array de usuarios
-   *     pageable: {...},            // Info de paginación
-   *     totalElements: number,      // Total de usuarios
-   *     totalPages: number,         // Total de páginas
-   *     size: number,              // Tamaño de página
-   *     number: number,            // Página actual
-   *     first: boolean,            // Es primera página
-   *     last: boolean              // Es última página
-   *   }
    */
   getAllUsers: async (params = { page: 0, size: 10 }) => {
     try {
-      // Validaciones del frontend que coinciden con tu UserService
       if (params.page < 0) {
         throw new Error('El número de página debe ser >= 0');
       }
@@ -364,19 +294,6 @@ export const adminAPI = {
 
   /**
    * Crear nuevo usuario (Solo Admin)
-   * Conecta con: POST /admin/users/create → AdminController.createUser()
-   * Requiere: ROLE_ADMIN
-   *
-   * @param {Object} userData - Datos del usuario a crear (CreateUserRequest)
-   * @param {string} userData.username - Username único
-   * @param {string} userData.password - Contraseña
-   * @param {string} userData.firstName - Nombre
-   * @param {string} userData.lastName - Apellido
-   * @param {string} userData.email - Email único
-   * @param {string} userData.dni - DNI único
-   * @param {string} userData.dateOfBirth - Fecha de nacimiento (YYYY-MM-DD)
-   * @param {string} userData.role - Rol (USER/ADMIN)
-   * @returns {Promise} ApiResponse<UserResponse> con usuario creado
    */
   createUser: async (userData) => {
     try {
@@ -385,11 +302,82 @@ export const adminAPI = {
     } catch (error) {
       throw error;
     }
+  },
+
+  /**
+   * Obtener usuario por ID (Solo Admin)
+   */
+  getUserById: async (userId) => {
+    try {
+      const response = await axiosInstance.get(`/admin/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Actualizar usuario por ID (Solo Admin)
+   */
+  updateUser: async (userId, userData) => {
+    try {
+      const response = await axiosInstance.put(`/admin/users/${userId}`, userData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Eliminar usuario por ID (Solo Admin)
+   */
+  deleteUser: async (userId) => {
+    try {
+      const response = await axiosInstance.delete(`/admin/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+// ==============================================
+// API DE USUARIO
+// ==============================================
+/**
+ * API de usuarios - Conecta con UserController
+ */
+export const userAPI = {
+  /**
+   * Obtener perfil del usuario autenticado
+   * Conecta con: GET /users/me → UserController.getCurrentUser()
+   * Requiere: ROLE_USER o ROLE_ADMIN
+   */
+  getCurrentUser: async () => {
+    try {
+      const response = await axiosInstance.get('/users/me');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Actualizar perfil del usuario autenticado
+   * Conecta con: PUT /users/me → UserController.updateCurrentUser()
+   * Requiere: ROLE_USER o ROLE_ADMIN
+   */
+  updateCurrentUser: async (userData) => {
+    try {
+      const response = await axiosInstance.put('/users/me', userData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 };
 
 // ==============================================
-// FUNCIONES DE UTILIDAD Y HELPERS
+// FUNCIONES HELPER AUTH
 // ==============================================
 
 /**
@@ -429,44 +417,170 @@ export const loginUser = async (loginData) => {
 };
 
 /**
- * Función helper para logout completo
- * Limpia tokens y redirige a login
- */
-export const logoutUser = () => {
-  removeToken(); // Limpia localStorage
-  window.location.href = '/login'; // Redirige a login
-};
-
-/**
- * Función helper para registro completo
- * Realiza registro de nuevo usuario
- *
- * @param {Object} userData - Datos del nuevo usuario
- * @returns {Promise<Object>} {success: boolean, data?: Object, error?: string}
+ * Función helper para manejar registro completo
  */
 export const registerUser = async (userData) => {
   try {
     const response = await authAPI.register(userData);
 
-    if (response.success) {
-      return {
-        success: true,
-        data: response.data,
-        message: response.message
-      };
-    } else {
-      return {
-        success: false,
-        error: response.message || 'Error en registro'
-      };
-    }
+    return {
+      success: true,
+      data: response.data,
+      message: response.message || 'Usuario registrado exitosamente'
+    };
   } catch (error) {
+    // ARREGLO: Manejar correctamente los errores HTTP del backend
+    console.log('Error en registerUser:', error);
+    console.log('Error response:', error.response?.data);
+    console.log('Error specificMessage:', error.specificMessage);
+
     return {
       success: false,
-      error: error.response?.data?.message || error.message || 'Error de conexión'
+      // Usar el mensaje específico del interceptor
+      error: error.specificMessage || 'Error en registro'
     };
   }
 };
 
-// Exportar instancia para usar en authService.js y userService.js
+// ==============================================
+// FUNCIONES HELPER PARA ADMINISTRADOR
+// ==============================================
+
+/**
+ * Helper para obtener todos los usuarios con paginación
+ */
+export const getAllUsersAdmin = async (page = 0, size = 10) => {
+  try {
+    const response = await adminAPI.getAllUsers({ page, size });
+    return {
+      success: true,
+      data: response,
+      message: 'Usuarios obtenidos exitosamente'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Error al obtener usuarios'
+    };
+  }
+};
+
+/**
+ * Helper para crear usuario como administrador
+ */
+export const createUserAdmin = async (userData) => {
+  try {
+    const response = await adminAPI.createUser(userData);
+    return {
+      success: true,
+      data: response.data,
+      message: response.message || 'Usuario creado exitosamente'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Error al crear usuario'
+    };
+  }
+};
+
+/**
+ * Helper para obtener usuario por ID
+ */
+export const getUserByIdAdmin = async (userId) => {
+  try {
+    const response = await adminAPI.getUserById(userId);
+    return {
+      success: true,
+      data: response,
+      message: 'Usuario obtenido exitosamente'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Error al obtener usuario'
+    };
+  }
+};
+
+/**
+ * Helper para actualizar usuario
+ */
+export const updateUserAdmin = async (userId, userData) => {
+  try {
+    const response = await adminAPI.updateUser(userId, userData);
+    return {
+      success: true,
+      data: response,
+      message: 'Usuario actualizado exitosamente'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Error al actualizar usuario'
+    };
+  }
+};
+
+/**
+ * Helper para eliminar usuario
+ */
+export const deleteUserAdmin = async (userId) => {
+  try {
+    const response = await adminAPI.deleteUser(userId);
+    return {
+      success: true,
+      message: 'Usuario eliminado exitosamente'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Error al eliminar usuario'
+    };
+  }
+};
+
+// ==============================================
+// FUNCIONES HELPER PARA USUARIOS
+// ==============================================
+
+/**
+ * Helper para obtener perfil del usuario actual
+ */
+export const getCurrentUser = async () => {
+  try {
+    const response = await userAPI.getCurrentUser();
+    return {
+      success: true,
+      data: response,
+      message: 'Perfil obtenido exitosamente'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Error al obtener perfil'
+    };
+  }
+};
+
+/**
+ * Helper para actualizar perfil del usuario actual
+ */
+export const updateCurrentUser = async (userData) => {
+  try {
+    const response = await userAPI.updateCurrentUser(userData);
+    return {
+      success: true,
+      data: response,
+      message: 'Perfil actualizado exitosamente'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Error al actualizar perfil'
+    };
+  }
+};
+
+// Exportar instancia para usar en otros archivos si es necesario
 export default axiosInstance;

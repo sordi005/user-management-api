@@ -57,25 +57,23 @@ const LoginForm = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      // Llamar a la API (esto usa tu AuthController)
+      // Llamar a la API usando tu función helper original
+      // RESTAURADO: loginUser() espera un objeto con { username, password }
       const response = await loginUser(formData);
 
-      // Si el login es exitoso, loginUser() devuelve:
-      // { success: true, user: { access_token: "...", ... }, message: "..." }
       if (response.success) {
         setMessage('¡Login exitoso! Redirigiendo...');
 
-        // El token se guarda automáticamente en api.js
+        // El token ya se guarda automáticamente en loginUser()
         console.log('Usuario logueado:', response.user);
 
-        // NUEVO: Notificar al componente padre que el login fue exitoso
+        // Notificar al componente padre que el login fue exitoso
         if (onLoginSuccess) {
           setTimeout(() => {
             onLoginSuccess();
-          }, 1000); // Esperar 1 segundo para mostrar el mensaje
+          }, 1000);
         }
       } else {
-        // Mostrar error devuelto por la API
         setError(response.error || 'Error en el login');
       }
 
