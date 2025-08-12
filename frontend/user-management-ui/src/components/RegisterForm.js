@@ -88,9 +88,25 @@ const RegisterForm = () => {
       return false;
     }
 
-    // Validar fecha de nacimiento (NUEVO)
+    // Validar fecha de nacimiento
     if (!formData.dateOfBirth) {
       setError('La fecha de nacimiento es requerida');
+      return false;
+    }
+
+    //Validar que la fecha sea en el pasado
+    const selectedDate = new Date(formData.dateOfBirth);
+    const today = new Date();
+
+    if (selectedDate >= today) {
+      setError('La fecha de nacimiento debe ser en el pasado');
+      return false;
+    }
+
+    //  Validar edad mínima (por ejemplo, mayor de 13 años)
+    const age = today.getFullYear() - selectedDate.getFullYear();
+    if (age < 13) {
+      setError('Debes tener al menos 13 años para registrarte');
       return false;
     }
 
