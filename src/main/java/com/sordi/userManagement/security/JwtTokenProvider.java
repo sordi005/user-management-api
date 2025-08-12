@@ -112,12 +112,50 @@ public class JwtTokenProvider {
         return false;
     }
 
+
     /**
-     * Genera un token JWT para el usuario especificado.
+     * Genera un token JWT para el usuario especificado CON ROLES.
      *
      * @param username nombre de usuario para incluir en el token
+     * @param userRole rol del usuario (USER, ADMIN)
      * @return token JWT firmado como String
      */
+    public String generateToken(String username, String userRole) {
+        // Validación de entrada
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("No se puede generar token sin username");
+        }
+        if (userRole == null || userRole.trim().isEmpty()) {
+            throw new IllegalArgumentException("No se puede generar token sin role");
+        }
+
+        try {
+            Date now = new Date();
+            Date expiryDate = jwtConfig.calculateExpirationDate();
+
+            //Construir el token CON ROLES
+            return Jwts.builder()
+                    .subject(username)                      // "sub": username
+                    .claim("role", userRole)                // "role": "ADMIN" o "USER"
+                    .claim("authorities", "ROLE_" + userRole) // "authorities": "ROLE_ADMIN" o "ROLE_USER"
+                    .issuedAt(now)                         // "iat": fecha actual
+                    .expiration(expiryDate)                // "exp": fecha expiración
+                    .issuer("user-management-api")         // "iss": emisor
+                    // SIGNATURE (firma digital)
+                    .signWith(secretKey)
+                    .compact();  // Convierte a string JWT final
+
+        } catch (Exception e) {
+            log.error("Error generando token JWT para usuario {}: {}", username, e.getMessage());
+            throw new RuntimeException("Error generando token de autenticación");
+        }
+    }
+
+    /**
+     * Método original sin roles
+     * @deprecated Usar generateToken(username, userRole) en su lugar
+     */
+    @Deprecated
     public String generateToken(String username) {
         // Validación de entrada
         if (username == null || username.trim().isEmpty()) {
@@ -171,6 +209,38 @@ public class JwtTokenProvider {
         } catch (Exception e) {
             log.error("Error extrayendo username del token: {}", e.getMessage());
             throw new BusinessException("Error procesando token de autenticación");
+        }
+    }
+
+    /**
+     * Extrae el rol del usuario del token JWT.
+     *
+     * @param token token JWT válido
+     * @return rol del usuario contenido en el token
+     */
+    public String getRoleFromToken(String token) {
+        if (!validateToken(token)) {
+            throw new BusinessException("Token JWT inválido");
+        }
+
+        try {
+            Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+            String role = claims.get("role", String.class);
+            if (role == null || role.trim().isEmpty()) {
+                log.warn("Token JWT no contiene rol válido");
+                return "USER"; // Rol por defecto
+            }
+
+            return role;
+
+        } catch (Exception e) {
+            log.error("Error extrayendo rol del token: {}", e.getMessage());
+            return "USER"; // Rol por defecto en caso de error
         }
     }
 
