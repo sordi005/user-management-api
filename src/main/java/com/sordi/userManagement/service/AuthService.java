@@ -119,7 +119,7 @@ public class AuthService {
                 });
 
             //  Generar JWT token y refresh token
-            String accessToken = jwtTokenProvider.generateToken(user.getUsername());
+            String accessToken = jwtTokenProvider.generateToken(user.getUsername(),user.getRole().name());
             String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
 
             log.info("Login exitoso para usuario: {}", user.getUsername());
@@ -168,7 +168,7 @@ public class AuthService {
                 });
 
             // Generar nuevo access token (y opcionalmente nuevo refresh token)
-            String newAccessToken = jwtTokenProvider.generateToken(user.getUsername());
+            String newAccessToken = jwtTokenProvider.generateToken(user.getUsername(),user.getRole().name());
             String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
 
             log.info("Token renovado exitosamente para usuario: {}", username);
