@@ -4,3 +4,8 @@ spring:
   application:
     name: user-management-api
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
