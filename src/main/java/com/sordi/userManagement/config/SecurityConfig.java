@@ -79,9 +79,14 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()           // Login, register (con context-path /api)
                 .requestMatchers("/h2-console/**").permitAll()         // Base de datos H2 - solo desarrollo
 
-                // ENDPOINTS OPCIONALES
-                .requestMatchers("/swagger-ui/**").permitAll()          // Documentación Swagger
-                .requestMatchers("/v3/api-docs/**").permitAll()         // Datos para Swagger
+                .requestMatchers(
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**",
+                    "/v3/api-docs",
+                    "/swagger-resources/**",
+                    "/webjars/**"
+                ).permitAll()            // Recursos estáticos de Swagger
 
                 // ENDPOINTS PRIVADOS CON ROLES
                 .requestMatchers("/users/**").hasAnyRole("USER", "ADMIN")      // Usuarios autenticados (sin context-path)
