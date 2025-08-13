@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:UserManagementAPI}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:user_management}
     username: ${DB_USERNAME:user}
     password: ${DB_PASSWORD:1234}
     driver-class-name: org.postgresql.Driver
@@ -27,17 +27,17 @@ jwt:
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 days in milliseconds
 
 server:
-  port: ${SERVER_PORT:8086}
+  port: ${SERVER_PORT:8080}
 
 logging:
   level:
-    com.sordi.usermanagement: ${LOG_LEVEL_APP:INFO}
-    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
-    org.hibernate.sql = ${SHOW_SQL:DEBUG}
-    org.hibernate.type = OFF
-    org.springframework.web: WARN
-    org.springframework.boot : WARN
-    org.postgresql : WARN
+    com.sordi.usermanagement: ${LOG_LEVEL_APP:DEBUG}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:DEBUG}
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.web: INFO
+    org.springframework.boot: INFO
+    org.postgresql: INFO
 
   file:
     name: logs/user-management-api.log
