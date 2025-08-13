@@ -12,10 +12,10 @@ import java.time.LocalDateTime;
  * Envoltura estándar para las respuestas API de todos los endpoints REST.
  * Proporciona un formato de respuesta consistente en toda la aplicación.
  */
-@Data  // Anotación de Lombok para generar automáticamente getters, setters, equals, hashCode y toString
-@NoArgsConstructor  // Lombok: genera constructor sin argumentos
-@AllArgsConstructor  // Lombok: genera constructor con todos los argumentos
-@JsonInclude(JsonInclude.Include.NON_NULL)  // Ignora campos nulos al serializar a JSON
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
     /**
