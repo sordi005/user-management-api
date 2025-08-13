@@ -111,6 +111,43 @@ public class JwtTokenProvider {
 
         return false;
     }
+    /**
+     * Genera un token JWT para el usuario especificado CON ROLES.
+     *
+     * @param username nombre de usuario para incluir en el token
+     * @param userRole rol del usuario (USER, ADMIN)
+     * @return token JWT firmado como String
+     */
+    public String generateToken(String username, String userRole) {
+        // Validación de entrada
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("No se puede generar token sin username");
+        }
+        if (userRole == null || userRole.trim().isEmpty()) {
+            throw new IllegalArgumentException("No se puede generar token sin role");
+        }
+
+        try {
+            Date now = new Date();
+            Date expiryDate = jwtConfig.calculateExpirationDate();
+
+            //Construir el token CON ROLES
+            return Jwts.builder()
+                    .subject(username)                      // "sub": username
+                    .claim("role", userRole)                // "role": "ADMIN" o "USER"
+                    .claim("authorities", "ROLE_" + userRole) // "authorities": "ROLE_ADMIN" o "ROLE_USER"
+                    .issuedAt(now)                         // "iat": fecha actual
+                    .expiration(expiryDate)                // "exp": fecha expiración
+                    .issuer("user-management-api")         // "iss": emisor
+                    // SIGNATURE (firma digital)
+                    .signWith(secretKey)
+                    .compact();  // Convierte a string JWT final
+
+        } catch (Exception e) {
+            log.error("Error generando token JWT para usuario {}: {}", username, e.getMessage());
+            throw new RuntimeException("Error generando token de autenticación");
+        }
+    }
 
     /**
      * Genera un token JWT para el usuario especificado.
@@ -118,6 +155,7 @@ public class JwtTokenProvider {
      * @param username nombre de usuario para incluir en el token
      * @return token JWT firmado como String
      */
+    @Deprecated
     public String generateToken(String username) {
         // Validación de entrada
         if (username == null || username.trim().isEmpty()) {
