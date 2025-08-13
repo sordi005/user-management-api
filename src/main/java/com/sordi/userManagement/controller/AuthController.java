@@ -8,6 +8,9 @@ import com.sordi.userManagement.model.dto.response.JwtResponse;
 import com.sordi.userManagement.model.dto.response.UserResponse;
 import com.sordi.userManagement.service.AuthService;
 import com.sordi.userManagement.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth")  // Cambiar de "api/auth" a solo "/auth"
+@RequestMapping("/auth")
+@Tag(name = "Autentication", description = "Endpoints para login y registro")
 public class AuthController {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private final AuthService authService;
@@ -57,11 +61,21 @@ public class AuthController {
     }
 
     /**
-     * Autentica a un usuario y retorna un JWT token
+     * Autentíca a un usuario y retorna un JWT token
      * @param request credenciales del usuario (username/email y password)
      * @return Respuesta con el JWT token
      */
     @PostMapping("/login")
+    @Operation(
+            summary = "Inicia sesión y devuelve un 'ApiResponse' con Token jwt",
+            description = "Recibe credenciales y responde con un token JWT válido.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.
+                            ApiResponse(responseCode = "200", description = "Login exitoso"),
+                    @io.swagger.v3.oas.annotations.responses.
+                            ApiResponse(responseCode = "401", description = "Credenciales inválidas")
+            }
+    )
     public ResponseEntity<ApiResponse<JwtResponse>> login(@Valid @RequestBody LoginRequest request) {
         logger.info("Intento de login para usuario: {}", request.getUsername());
 
